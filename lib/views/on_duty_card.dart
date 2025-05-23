@@ -12,14 +12,14 @@ import '../models/clock_records_state.dart';
 /// ──────────────────────────────────────────────────────────────
 ///  DutyCard：可展開/折疊的上班打卡區塊
 /// ──────────────────────────────────────────────────────────────
-class DutyCard extends StatefulWidget {
-  const DutyCard({super.key});
+class OnDutyCard extends StatefulWidget {
+  const OnDutyCard({super.key});
 
   @override
-  State<DutyCard> createState() => _DutyCardState();
+  State<OnDutyCard> createState() => _OnDutyCardState();
 }
 
-class _DutyCardState extends State<DutyCard> {
+class _OnDutyCardState extends State<OnDutyCard> {
   Timer? _longPressTimer;
   // 3 個 TextEditingController
   late final TextEditingController hCtl;
@@ -69,6 +69,7 @@ class _DutyCardState extends State<DutyCard> {
 
         // 第一次進來或尚未打卡
         final isFirstTime = !hasClockedIn;
+        print('isFirstTime: $isFirstTime');
 
         // 只要 state.isEditingClockIn = true，就進入編輯模式
         final isEditing = state.isEditingClockIn || isFirstTime;
@@ -102,7 +103,12 @@ class _DutyCardState extends State<DutyCard> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("打卡時間", style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                "上班時間",
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                      color: Colors.grey,
+                    ),
+              ),
               Text(fmt.format(clockIn), style: Theme.of(context).textTheme.titleLarge),
             ],
           ),
@@ -123,7 +129,7 @@ class _DutyCardState extends State<DutyCard> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("上班打卡", style: Theme.of(context).textTheme.titleMedium),
+          Text("上班時間", style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -154,22 +160,28 @@ class _DutyCardState extends State<DutyCard> {
                     ),
                     const SizedBox(height: 8),
                   ],
-                  FilledButton(
-                    onPressed: () {
-                      final bloc = context.read<ClockRecordsBloc>();
-                      bloc.add(isFirstTime ? ClockInPressed(_selected) : ClockInEdited(_selected));
-                    },
-                    child: const Text("打卡"),
+                  // 只有編輯舊資料才顯示取消
+
+                  Row(
+                    children: [
+                      if (!isFirstTime) ...[
+                        TextButton(
+                          onPressed: () => context.read<ClockRecordsBloc>().add(ClockInEditCanceled()),
+                          child: const Text("取消"),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      FilledButton(
+                        onPressed: () {
+                          final bloc = context.read<ClockRecordsBloc>();
+                          bloc.add(isFirstTime ? ClockInPressed(_selected) : ClockInEdited(_selected));
+                        },
+                        child: const Text("打卡"),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(width: 8),
-              // 只有編輯舊資料才顯示取消
-              if (!isFirstTime)
-                TextButton(
-                  onPressed: () => context.read<ClockRecordsBloc>().add(ClockInEditCanceled()),
-                  child: const Text("取消"),
-                ),
             ],
           ),
         ],
@@ -206,17 +218,28 @@ class _DutyCardState extends State<DutyCard> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _spinBtn(Icons.add, onAdd),
         SizedBox(
-          width: 40,
+          width: 50,
           child: TextField(
             textAlign: TextAlign.center,
             controller: controller,
-            style: const TextStyle(fontSize: 24, color: ColorCode.primaryColor, fontWeight: FontWeight.w600),
+            readOnly: true,
+            style: const TextStyle(
+              fontSize: 24,
+              color: ColorCode.primaryColor,
+              fontWeight: FontWeight.w600,
+            ),
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(isDense: true, border: InputBorder.none),
+            decoration: const InputDecoration(
+              isDense: true,
+              border: InputBorder.none,
+              filled: false,
+            ),
           ),
         ),
+        const SizedBox(height: 8),
+        _spinBtn(Icons.add, onAdd),
+        const SizedBox(height: 4),
         _spinBtn(Icons.remove, onRemove),
       ],
     );

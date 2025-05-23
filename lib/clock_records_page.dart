@@ -5,7 +5,7 @@ import 'package:wise_clock/clock_records_bloc.dart';
 import 'package:wise_clock/clock_records_repository.dart';
 import 'package:wise_clock/daily_clock_log.dart';
 import 'package:wise_clock/local_clock_records_repository.dart';
-import 'package:wise_clock/views/duty_card.dart';
+import 'package:wise_clock/views/on_duty_card.dart';
 
 import 'app_clock_records_repository.dart';
 import 'models/clock_records_event.dart';
@@ -111,21 +111,7 @@ class _ClockRecordsViewState extends State<_ClockRecordsView> {
           mainAxisSize: MainAxisSize.max,
           children: [
             const SizedBox(height: 8),
-            DutyCard(),
-            // dutyContainer(
-            //   context,
-            //   containerTitle: "上班打卡",
-            //   hourCtrl: onDutyHourController,
-            //   minCtrl: onDutyMinController,
-            //   secCtrl: onDutySecController,
-            // ),
-            // dutyContainer(
-            //   context,
-            //   containerTitle: "下班打卡",
-            //   hourCtrl: offDutyHourController,
-            //   minCtrl: offDutyMinController,
-            //   secCtrl: offDutySecController,
-            // ),
+            OnDutyCard(),
             Row(
               spacing: 8,
               children: [
