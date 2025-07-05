@@ -15,8 +15,8 @@ class LandingView extends StatefulWidget {
 
 class _LandingViewState extends State<LandingView> with SingleTickerProviderStateMixin {
   bool lightMode = true;
-  late Animation<double> animation;
-  late AnimationController _animationController;
+  late final Animation<double> animation;
+  late final AnimationController _animationController;
 
   Menu selectedBottonNav = bottomNavItems.first;
 
@@ -60,29 +60,55 @@ class _LandingViewState extends State<LandingView> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFFF2F6FF),
-      appBar: AppBar(
-        centerTitle: false,
-        backgroundColor: Color(0xFF364156),
-        title: Text(todayDateString),
-        titleSpacing: 24,
-        titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: ColorCode.bgColor,
-              fontWeight: FontWeight.w600,
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFFF1F5F9), // 更深的藍黑色
+
+        // gradient: LinearGradient(
+        //   begin: Alignment.topCenter,
+        //   end: Alignment.bottomCenter,
+        //   colors: [
+        //     Color(0xFFFFFFFF),
+        //     Color(0xFFF8FAFC),
+        //   ],
+        // ),
       ),
-      bottomNavigationBar: Transform.translate(
-        offset: Offset(0, 100 * animation.value),
-        child: SafeArea(
-          child: _floattingBtmNavBar(context),
+      child: Scaffold(
+        // backgroundColor: Color(0xFFF2F6FF),
+        backgroundColor: Colors.transparent,
+        extendBody: true,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          centerTitle: false,
+          // backgroundColor: Color(0xFFF2F6FF),
+          backgroundColor: Colors.transparent,
+          // surfaceTintColor: Color(0xFFF2F6FF),
+          surfaceTintColor: Colors.transparent,
+          // shadowColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          title: Text(todayDateString),
+          titleSpacing: 24,
+          titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: ColorCode.primaryColor,
+                fontWeight: FontWeight.w600,
+              ),
         ),
+        bottomNavigationBar: Transform.translate(
+          offset: Offset(0, 100 * animation.value),
+          child: SafeArea(
+            child: _floattingBtmNavBar(context),
+          ),
+        ),
+        body: SafeArea(
+            child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: widget.child,
+        )),
       ),
-      body: widget.child,
     );
   }
 
-  Container _floattingBtmNavBar(BuildContext context) {
+  Widget _floattingBtmNavBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.only(left: 12, top: 12, right: 12, bottom: 12),
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

@@ -1,24 +1,49 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:wise_clock/hive/clock_adapter.dart';
-
-import '../daily_clock_log.dart';
-import '../models/clock_records.dart';
+import 'package:wise_clock/hive/clock_record.dart';
 
 class HiveService {
   Future<void> initializeHive() async {
     await Hive.initFlutter();
-
-    Hive
-      ..registerAdapter(DurationAdapter()) // id 1
-      ..registerAdapter(OnDutyClockAdapter()) // id 0
-      ..registerAdapter(OffDutyClockAdapter()) // id 2
-      ..registerAdapter(DailyClockLogAdapter()); // id 3 ← 新增
-
-    await Hive.openBox<OnDutyClockRecords>('clockRecords');
-    await Hive.openBox<DailyClockLog>('dailyLogs');
+    Hive.registerAdapter(ClockInAdapter());
+    await Hive.deleteBoxFromDisk('clockInRecords');
+    await Hive.openBox<ClockRecord>("clockInRecords");
   }
 
-  Box<OnDutyClockRecords> get getClockRecordsBox {
-    return Hive.box<OnDutyClockRecords>('clockRecords');
+  Box<ClockRecord> get clockInRecordsBox {
+    return Hive.box<ClockRecord>("clockInRecords");
+  }
+}
+
+class ClockInAdapter extends TypeAdapter<ClockRecord> {
+  @override
+  int get typeId => 0;
+
+  @override
+  ClockRecord read(BinaryReader reader) {
+    // 1️⃣ 先读 id
+    final id = reader.read() as String;
+    // 2️⃣ 再读 clockInTime（可能为 null）
+    final clockInTime = reader.read() as DateTime;
+    // 3️⃣ 最后读 clockOutTime（可能为 null）
+    final clockOutTime = reader.read() as DateTime?;
+    final offDuration = reader.read() as double?;
+
+    return ClockRecord(
+      id: id,
+      clockInTime: clockInTime,
+      clockOutTime: clockOutTime,
+      offDuration: offDuration,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, ClockRecord obj) {
+    // 1️⃣ 写 id（String）
+    writer.write(obj.id);
+    // 2️⃣ 写 clockInTime（DateTime?）
+    writer.write(obj.clockInTime);
+    // 3️⃣ 写 clockOutTime（DateTime?）
+    writer.write(obj.clockOutTime);
+    writer.write(obj.offDuration);
   }
 }

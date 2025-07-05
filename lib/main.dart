@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wise_clock/color_scheme/color_code.dart';
-import 'package:wise_clock/views/history_view.dart';
+import 'package:wise_clock/bloc/dashboard_bloc.dart';
+import 'package:wise_clock/bloc/dashboard_event.dart';
+
+import 'package:wise_clock/model/dashboard_repository.dart';
+import 'package:wise_clock/views/app_theme.dart';
+import 'package:wise_clock/views/history_view/history_view.dart';
 import 'package:wise_clock/views/landing_view.dart';
-
-import 'clock_records_page.dart';
-import 'color_scheme/color_scheme.dart';
 import 'hive/hive_service.dart';
+import 'views/main_record_view/clock_records_view.dart';
 
-final hiveService = HiveService();
 final GoRouter _router = GoRouter(
   routes: <RouteBase>[
     ShellRoute(
@@ -21,7 +23,7 @@ final GoRouter _router = GoRouter(
           path: "/",
           pageBuilder: (_, state) => NoTransitionPage(
             key: state.pageKey,
-            child: ClockRecordsPage(),
+            child: ClockRecordsView(),
           ),
         ),
         GoRoute(
@@ -36,13 +38,17 @@ final GoRouter _router = GoRouter(
     ),
   ],
 );
+// final hiveService = HiveService();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  final hiveService = HiveService();
   await hiveService.initializeHive();
+  final box = hiveService.clockInRecordsBox;
+  final dashboardModel = DashboardRepository(box: box);
 
   runApp(
-    MyApp(),
+    BlocProvider(create: (context) => DashboardBloc(dashboardModel)..add(TimeboardDataRequested()), child: MyApp()),
   );
 }
 
@@ -58,26 +64,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       themeMode: ThemeMode.light,
-      theme: ThemeData(
-        inputDecorationTheme: InputDecorationTheme(
-            border: InputBorder.none, contentPadding: EdgeInsets.all(4), filled: true, fillColor: ColorCode.bgColor),
-        filledButtonTheme: FilledButtonThemeData(
-          style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.all<Color>(ColorCode.primaryColor),
-            foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
-            padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
-              EdgeInsets.symmetric(horizontal: 16),
-            ),
-            elevation: WidgetStateProperty.all<double>(2),
-            shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-        ),
-      ),
-      darkTheme: AppTheme.dark,
+      theme: MyTheme.theme,
+      // darkTheme: AppTheme.dark,
       routerConfig: _router,
     );
   }
