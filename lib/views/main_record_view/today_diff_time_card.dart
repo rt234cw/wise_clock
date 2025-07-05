@@ -1,74 +1,104 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:wise_clock/views/share_ui_components/shared_container.dart';
+// lib/views/main_record_view/today_diff_time_card.dart
 
-import '../../bloc/dashboard_bloc.dart';
-import '../../bloc/clock_record_state.dart';
+import 'package:flutter/material.dart';
+import 'package:wise_clock/views/share_ui_components/shared_container.dart';
+import '../../bloc/bloc_barrel.dart';
+import '../../color_scheme/color_code.dart';
+import 'package:wise_clock/hive/clock_record.dart'; // 確保引入 ClockRecord
 
 class TodayDiffTimeCard extends StatelessWidget {
   const TodayDiffTimeCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    const standardDayWorkDuration = Duration(hours: 8);
+    const standardBreakDuration = Duration(hours: 1);
+
     return SharedContainer(
         child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "今日時數",
+          "本日時數",
           style: Theme.of(context).textTheme.titleMedium,
         ),
         BlocBuilder<DashboardBloc, DashboardState>(
+          buildWhen: (previous, current) => previous.todayRecord != current.todayRecord,
           builder: (context, state) {
-            if (state.todayRecord?.clockInTime != null && state.todayRecord?.clockOutTime != null) {
-              final onTime = state.todayRecord!.clockInTime;
-              print('onTime: $onTime');
-
-              final offTime = state.todayRecord!.clockOutTime!;
-              print('offTime: $offTime');
-
-              final actualWorkDuration = offTime.difference(onTime);
-
-              // 標準工作時間（9小時）
-              final standardWorkDuration = Duration(hours: 9);
-
-              // 計算差異（實際 - 標準）
-              final difference = actualWorkDuration - standardWorkDuration;
-
-              // 計算總分鐘數（包含小時轉換成的分鐘）
-              final totalMinutes = difference.inMinutes.abs();
-              // 計算秒數（不含分鐘部分）
-              final seconds = difference.inSeconds.abs() % 60;
-
-              // 格式化文字，補零確保兩位數顯示
-              final formattedTime = '${totalMinutes.toString().padLeft(2, '0')}分${seconds.toString().padLeft(2, '0')}秒';
-
-              if (difference.isNegative) {
-                return FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '不足 $formattedTime',
-                    maxLines: 1,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.red[400],
-                        ),
-                  ),
-                );
-              } else {
-                return FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '超出 $formattedTime',
-                    maxLines: 1,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.green[400],
-                        ),
-                  ),
-                );
-              }
-            } else {
-              return Text('尚未完成打卡');
+            final todayRecord = state.todayRecord;
+            if (todayRecord == null) {
+              return const Text("--:--");
             }
+
+            // ✨ 1. 只宣告一次，用來儲存最終的計算結果
+            Duration totalRecognizedDuration;
+
+            // ✨ 2. 檢查是否為「整天請假」的特殊情況
+            if (todayRecord.leaveDuration == 8.0) {
+              // 如果是，直接將認定工時設為 8 小時
+              totalRecognizedDuration = const Duration(hours: 8);
+            } else {
+              // ✨ 3. 否則，執行正常的詳細計算
+              Duration dailyNetWorkDuration = Duration.zero;
+
+              // 計算實際在公司工時
+              if (todayRecord.clockOutTime != null) {
+                final grossDuration = todayRecord.clockOutTime!.difference(todayRecord.clockInTime);
+
+                Duration breakToSubtract;
+                if (todayRecord.offDuration != null) {
+                  breakToSubtract = Duration(seconds: (todayRecord.offDuration! * 3600).round());
+                } else {
+                  breakToSubtract = (grossDuration.inHours >= 6) ? standardBreakDuration : Duration.zero;
+                }
+                dailyNetWorkDuration = grossDuration - breakToSubtract;
+              }
+
+              // 加上請假時數
+              final leaveInHours = todayRecord.leaveDuration ?? 0.0;
+              final leaveDuration = Duration(seconds: (leaveInHours * 3600).round());
+
+              // 總認定工時 = 淨工時 + 請假時數
+              totalRecognizedDuration = (dailyNetWorkDuration + leaveDuration).isNegative
+                  ? Duration.zero
+                  : (dailyNetWorkDuration + leaveDuration);
+            }
+
+            // --- 接下來的計算和顯示邏輯保持不變 ---
+            final difference = totalRecognizedDuration - standardDayWorkDuration;
+
+            final isNegative = difference.isNegative;
+            final absSeconds = difference.inSeconds.abs();
+            final hours = absSeconds ~/ 3600;
+            final minutes = (absSeconds % 3600) ~/ 60;
+
+            String formattedTime = '';
+            if (hours > 0) {
+              formattedTime += '$hours時';
+            }
+            formattedTime += '${minutes.toString().padLeft(2, '0')}分';
+
+            Color displayColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+            String prefix = '正好';
+
+            if (difference.inSeconds > 0) {
+              displayColor = ColorCode.green;
+              prefix = '超時';
+            } else if (difference.inSeconds < 0) {
+              displayColor = ColorCode.red;
+              prefix = '短缺';
+            }
+
+            return FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '$prefix $formattedTime',
+                maxLines: 1,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: displayColor,
+                    ),
+              ),
+            );
           },
         )
       ],

@@ -13,10 +13,10 @@ abstract class DashboardEvent extends Equatable {
 }
 
 // 從Hive中讀取當週的打卡記錄
-final class TimeboardDataRequested extends DashboardEvent {
-  @override
-  List<Object?> get props => [];
-}
+// final class TimeboardDataRequested extends DashboardEvent {
+//   @override
+//   List<Object?> get props => [];
+// }
 
 // 新增或編輯上班時間
 final class ClockInTimeSubmitted extends DashboardEvent {
@@ -39,6 +39,14 @@ final class ClockOutTimeSubmitted extends DashboardEvent {
 final class OffDurationSubmitted extends DashboardEvent {
   final double hours;
   const OffDurationSubmitted({required this.hours});
+  @override
+  List<Object> get props => [hours];
+}
+
+// ✨ 新增：提交請假時數的事件
+final class LeaveDurationSubmitted extends DashboardEvent {
+  final double hours;
+  const LeaveDurationSubmitted(this.hours);
   @override
   List<Object> get props => [hours];
 }

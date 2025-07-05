@@ -24,12 +24,38 @@ final class MyTheme {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: ButtonStyle(
-        backgroundColor: WidgetStateProperty.all<Color>(ColorCode.primaryColor),
-        foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
-        padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
-          EdgeInsets.symmetric(horizontal: 16),
+        // ✨ Use resolveWith to handle different states
+        backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+          (Set<WidgetState> states) {
+            // If the button is disabled, return a grey color
+            if (states.contains(WidgetState.disabled)) {
+              return Colors.grey.shade300; // Disabled background color
+            }
+            // For all other states (pressed, hovered, focused, etc.), return the primary color
+            return ColorCode.primaryColor; // Default background color
+          },
         ),
-        elevation: WidgetStateProperty.all<double>(2),
+        // ✨ Do the same for the foreground (text/icon) color
+        foregroundColor: WidgetStateProperty.resolveWith<Color?>(
+          (Set<WidgetState> states) {
+            if (states.contains(WidgetState.disabled)) {
+              return Colors.grey.shade500; // Disabled foreground color
+            }
+            return Colors.white; // Default foreground color
+          },
+        ),
+        elevation: WidgetStateProperty.resolveWith<double?>(
+          (Set<WidgetState> states) {
+            // Disabled buttons should have no shadow/elevation
+            if (states.contains(WidgetState.disabled)) {
+              return 0;
+            }
+            return 2; // Default elevation
+          },
+        ),
+        padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
+          const EdgeInsets.symmetric(horizontal: 16),
+        ),
         shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),

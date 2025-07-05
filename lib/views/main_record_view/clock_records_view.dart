@@ -1,11 +1,16 @@
+// lib/views/main_record_view/clock_records_view.dart
+
 import 'package:flutter/material.dart';
-import 'package:wise_clock/views/main_record_view/off_duty_card.dart';
-import 'package:wise_clock/views/main_record_view/on_duty_card.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wise_clock/bloc/clock_record_state.dart';
+import 'package:wise_clock/bloc/dashboard_bloc.dart';
+import 'package:wise_clock/model/editing_target.dart';
+import 'package:wise_clock/views/main_record_view/clock_action_card.dart';
+import 'package:wise_clock/views/main_record_view/leave_card.dart';
 import 'today_diff_time_card.dart';
 import 'week_diff_time_card.dart';
 
 class ClockRecordsView extends StatefulWidget {
-  final ValueChanged;
   const ClockRecordsView({super.key});
 
   @override
@@ -13,59 +18,64 @@ class ClockRecordsView extends StatefulWidget {
 }
 
 class _ClockRecordsViewState extends State<ClockRecordsView> {
+  EditingTarget _editingTarget = EditingTarget.none;
+
+  void _setEditingTarget(EditingTarget newTarget) {
+    setState(() {
+      _editingTarget = (_editingTarget == newTarget) ? EditingTarget.none : newTarget;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      spacing: 8,
-      children: [
-        OnDutyCard(),
-        OffDutyCard(),
-        Row(
+    return BlocBuilder<DashboardBloc, DashboardState>(
+      builder: (context, dataState) {
+        if (dataState.status == DataStatus.loading || dataState.status == DataStatus.initial) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (dataState.status == DataStatus.failure) {
+          return const Center(child: Text('讀取資料失敗'));
+        }
+
+        final todayRecord = dataState.todayRecord;
+
+        return Column(
           children: [
-            Expanded(child: TodayDiffTimeCard()),
-            const SizedBox(width: 4),
-            Expanded(child: WeekDiffTimeCard()),
+            // ✨ 上班打卡 Widget
+            ClockActionCard(
+              cardType: EditingTarget.clockIn,
+              isEditing: _editingTarget == EditingTarget.clockIn,
+              clockInTime: todayRecord?.clockInTime,
+              clockOutTime: todayRecord?.clockOutTime,
+              // ✨ 關鍵修正：將 leaveDuration 傳遞下去
+              leaveDuration: todayRecord?.leaveDuration,
+              onToggleEdit: _setEditingTarget,
+            ),
+            const SizedBox(height: 8),
+            // ✨ 下班打卡 Widget
+            ClockActionCard(
+              cardType: EditingTarget.clockOut,
+              isEditing: _editingTarget == EditingTarget.clockOut,
+              clockInTime: todayRecord?.clockInTime,
+              clockOutTime: todayRecord?.clockOutTime,
+              // ✨ 關鍵修正：將 leaveDuration 傳遞下去
+              leaveDuration: todayRecord?.leaveDuration,
+              onToggleEdit: _setEditingTarget,
+            ),
+            const SizedBox(height: 8),
+            const LeaveCard(),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: TodayDiffTimeCard()),
+                const SizedBox(width: 8),
+                Expanded(child: WeekDiffTimeCard()),
+              ],
+            ),
+            const Spacer(),
           ],
-        ),
-        Spacer(),
-        // OverflowBar(
-        //   children: [
-        //     ElevatedButton(
-        //       onPressed: () async {
-        //         await hiveService.clockInRecordsBox.put(
-        //             "1",
-        //             ClockRecord(
-        //                 id: "1",
-        //                 clockInTime: DateTime(2025, 5, 19, 9, 31, 27),
-        //                 clockOutTime: DateTime(2025, 5, 19, 17, 31, 27)));
-        //       },
-        //       child: Text("星期一"),
-        //     ),
-        //     ElevatedButton(
-        //       onPressed: () async {
-        //         await hiveService.clockInRecordsBox.put(
-        //             "2",
-        //             ClockRecord(
-        //                 id: "2",
-        //                 clockInTime: DateTime(2025, 5, 21, 9, 31, 27),
-        //                 clockOutTime: DateTime(2025, 5, 21, 19, 31, 28)));
-        //       },
-        //       child: Text("星期三"),
-        //     ),
-        //     ElevatedButton(
-        //       onPressed: () async {
-        //         await hiveService.clockInRecordsBox.put(
-        //             "8",
-        //             ClockRecord(
-        //                 id: "8",
-        //                 clockInTime: DateTime(2025, 5, 18, 9, 31, 27),
-        //                 clockOutTime: DateTime(2025, 5, 18, 18, 31, 29)));
-        //       },
-        //       child: Text("星期日"),
-        //     ),
-        //   ],
-        // )
-      ],
+        );
+      },
     );
   }
 }

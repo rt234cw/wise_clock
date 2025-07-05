@@ -48,7 +48,7 @@ void main() async {
   final dashboardModel = DashboardRepository(box: box);
 
   runApp(
-    BlocProvider(create: (context) => DashboardBloc(dashboardModel)..add(TimeboardDataRequested()), child: MyApp()),
+    BlocProvider(create: (context) => DashboardBloc(dashboardModel), child: MyApp()),
   );
 }
 
