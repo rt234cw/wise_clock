@@ -1,9 +1,15 @@
 // lib/views/main_record_view/leave_card.dart
 
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:wise_clock/bloc/bloc_barrel.dart';
+import 'package:wise_clock/bloc/clock_record_state.dart';
+import 'package:wise_clock/bloc/record_bloc.dart';
+import 'package:wise_clock/bloc/record_event.dart';
+import 'package:wise_clock/bloc/dashboard_bloc.dart';
+import 'package:wise_clock/bloc/record_state.dart';
+
 import 'package:wise_clock/views/share_ui_components/shared_container.dart';
 
 class LeaveCard extends StatefulWidget {
@@ -21,57 +27,92 @@ class _LeaveCardState extends State<LeaveCard> {
 
   // 確認對話框的方法
   Future<void> _showConfirmationDialog() async {
-    final bloc = context.read<DashboardBloc>();
+    final recordBloc = context.read<RecordBloc>();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog.adaptive(
-        title: const Text("確認操作"),
-        content: const Text("登記整天請假將會覆蓋您原有的上下班打卡紀錄，且此操作無法復原。您確定要繼續嗎？"),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text("取消")),
-          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text("確定")),
-        ],
-      ),
+      builder: (ctx) {
+        // 使用 Theme 來包裹，確保在 iOS 上有原生的點擊效果
+        return Theme(
+          data: Theme.of(context).copyWith(
+            highlightColor: Colors.transparent,
+            splashColor: Colors.transparent,
+          ),
+          child: AlertDialog.adaptive(
+            title: const Text("確認操作"),
+            content: const Text("登記整天請假將會覆蓋您原有的上下班打卡紀錄，且此操作無法復原。您確定要繼續嗎？"),
+            actions: _buildDialogActions(ctx),
+          ),
+        );
+      },
     );
 
     if (confirmed == true && _selectedHours != null) {
-      bloc.add(LeaveDurationSubmitted(_selectedHours!));
+      recordBloc.add(LeaveDurationSubmitted(_selectedHours!));
       setState(() {
         _isEditing = false;
       }); // 提交後自動切換到檢視模式
     }
   }
 
+  // 根據平台建立不同的對話框按鈕
+  List<Widget> _buildDialogActions(BuildContext context) {
+    final platform = Theme.of(context).platform;
+    if (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS) {
+      return [
+        CupertinoDialogAction(
+          isDestructiveAction: true,
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text("取消"),
+        ),
+        CupertinoDialogAction(
+          isDefaultAction: true,
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text("確定"),
+        ),
+      ];
+    } else {
+      return [
+        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("取消")),
+        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text("確定")),
+      ];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<DashboardBloc, DashboardState>(
-      listenWhen: (prev, curr) => prev.todayRecord?.leaveDuration != curr.todayRecord?.leaveDuration,
+    return BlocListener<RecordBloc, RecordState>(
+      // 監聽 RecordBloc 的提交狀態
       listener: (context, state) {
-        // 當 BLoC 的狀態更新時，同步本地的暫存值，確保顯示正確
-        setState(() {
-          _selectedHours = state.todayRecord?.leaveDuration ?? 0.0;
-        });
+        // 當提交成功後，重置本地的編輯狀態
+        if (state.submissionStatus.isSuccessful) {
+          setState(() {
+            _isEditing = false;
+            _selectedHours = null; // 重置選擇，讓 UI 在下次 build 時能從 BLoC 獲取最新值
+          });
+        }
+        // 您也可以在這裡處理 submissionStatus.isError 的情況，例如顯示一個錯誤 SnackBar
       },
-      builder: (context, state) {
-        final todayRecord = state.todayRecord;
-        final double savedHours = todayRecord?.leaveDuration ?? 0.0;
+      child: BlocBuilder<DashboardBloc, DashboardState>(
+        buildWhen: (prev, curr) => prev.todayRecord != curr.todayRecord,
+        builder: (context, state) {
+          final todayRecord = state.todayRecord;
+          final double savedHours = todayRecord?.leaveDuration ?? 0.0;
 
-        // ✨ 核心邏輯：決定是否顯示編輯畫面
-        // 1. 如果今天還沒有任何紀錄 (todayRecord == null)，則直接進入編輯模式。
-        // 2. 如果已有紀錄，則根據 _isEditing 旗標來決定。
-        final bool showEditView = (todayRecord == null) || _isEditing;
+          // ✨ 核心邏輯：決定是否顯示編輯畫面
+          final bool showEditView = (todayRecord == null) || _isEditing;
 
-        // 初始化或同步 UI 上的暫存值
-        _selectedHours ??= savedHours;
+          // 初始化或同步 UI 上的暫存值
+          _selectedHours ??= savedHours;
 
-        return SharedContainer(
-          child: showEditView ? _buildEditingView(context, savedHours) : _buildReadOnlyView(context, savedHours),
-        );
-      },
+          return SharedContainer(
+            child: showEditView ? _buildEditingView(context, savedHours) : _buildReadOnlyView(context, savedHours),
+          );
+        },
+      ),
     );
   }
 
-  // ✨ 檢視模式的 UI (請假完成後顯示)
+  // ✨ 檢視模式的 UI (請假完成後或初始有紀錄時顯示)
   Widget _buildReadOnlyView(BuildContext context, double savedHours) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -88,7 +129,6 @@ class _LeaveCardState extends State<LeaveCard> {
             ),
           ],
         ),
-        // ✨ 按下「調整」按鈕，進入編輯模式
         TextButton(
           onPressed: () {
             setState(() {
@@ -101,17 +141,17 @@ class _LeaveCardState extends State<LeaveCard> {
     );
   }
 
-  // ✨ 編輯模式的 UI (一開始或按下「調整」後顯示)
+  // ✨ 編輯模式的 UI (一開始無紀錄，或按下「調整」後顯示)
   Widget _buildEditingView(BuildContext context, double savedHours) {
-    final bloc = context.read<DashboardBloc>();
-    final todayRecord = bloc.state.todayRecord;
+    final recordBloc = context.read<RecordBloc>();
+    final todayRecord = context.read<DashboardBloc>().state.todayRecord;
     final bool isDayStarted = todayRecord != null;
     final bool isButtonEnabled = _selectedHours != savedHours;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text("請假", style: Theme.of(context).textTheme.titleMedium),
+        Text("請假/公出時數", style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -123,21 +163,15 @@ class _LeaveCardState extends State<LeaveCard> {
                   items: List.generate(9, (i) => i.toDouble())
                       .map((h) => DropdownMenuItem(value: h, child: Text(h == 0 ? "未請假" : "${h.toInt()} 小時")))
                       .toList(),
-                  // ✨ 只有在已有打卡紀錄時，才可選擇部分時數
                   onChanged: isDayStarted ? (v) => setState(() => _selectedHours = v) : null,
                 ),
               ),
             ),
             const SizedBox(width: 8),
             const Text("整天"),
-            Transform.scale(
-              scale: 1.5,
-              child: Checkbox.adaptive(
-                value: _selectedHours == 8.0,
-                onChanged: (v) => setState(() {
-                  _selectedHours = v == true ? 8.0 : 0.0;
-                }),
-              ),
+            Switch.adaptive(
+              value: _selectedHours == 8.0,
+              onChanged: (v) => setState(() => _selectedHours = v == true ? 8.0 : 0.0),
             ),
           ],
         ),
@@ -150,7 +184,7 @@ class _LeaveCardState extends State<LeaveCard> {
               TextButton(
                   onPressed: () => setState(() {
                         _isEditing = false;
-                        _selectedHours = null;
+                        _selectedHours = null; // 取消時重置選擇
                       }),
                   child: const Text("取消")),
             const SizedBox(width: 8),
@@ -160,17 +194,12 @@ class _LeaveCardState extends State<LeaveCard> {
                       if (_selectedHours == 8.0 && todayRecord?.clockOutTime != null) {
                         _showConfirmationDialog();
                       } else {
-                        bloc.add(LeaveDurationSubmitted(_selectedHours!));
-                        // 如果是無紀錄狀態下請假，提交後自動切換到檢視模式
-                        if (!isDayStarted) {
-                          setState(() {
-                            _isEditing = false;
-                          });
-                        }
+                        recordBloc.add(LeaveDurationSubmitted(_selectedHours!));
+                        // 提交後，讓 BlocListener 來處理狀態重置，這裡不再需要 setState
                       }
                     }
                   : null,
-              child: const Text("請假"),
+              child: const Text("登記"),
             ),
           ],
         ),

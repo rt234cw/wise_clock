@@ -55,7 +55,7 @@ class ActionButtons extends StatelessWidget {
             },
             child: Text("手輸")),
         SizedBox(width: 8),
-        FilledButton(
+        ElevatedButton(
             onPressed: () {
               quickClockIn();
             },

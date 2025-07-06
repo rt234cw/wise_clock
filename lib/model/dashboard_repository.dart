@@ -48,4 +48,8 @@ final class DashboardRepository {
     openRecords.sort((a, b) => b.clockInTime.compareTo(a.clockInTime));
     return openRecords.first;
   }
+
+  List<ClockRecord> getAllRecordsNow() {
+    return _box.values.toList();
+  }
 }

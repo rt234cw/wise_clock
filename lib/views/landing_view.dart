@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wise_clock/color_scheme/color_code.dart';
 import 'btm_nav_item.dart';
@@ -92,6 +93,13 @@ class _LandingViewState extends State<LandingView> with SingleTickerProviderStat
                 color: ColorCode.primaryColor,
                 fontWeight: FontWeight.w600,
               ),
+          systemOverlayStyle: SystemUiOverlayStyle(
+            // Brightness.dark 會顯示深色圖示 (適用於 Android)
+            statusBarIconBrightness: Brightness.dark,
+
+            // Brightness.light 表示狀態列背景是淺色的，因此圖示會是深色的 (適用於 iOS)
+            statusBarBrightness: Brightness.light,
+          ),
         ),
         bottomNavigationBar: Transform.translate(
           offset: Offset(0, 100 * animation.value),

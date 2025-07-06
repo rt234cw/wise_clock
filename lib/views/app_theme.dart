@@ -4,6 +4,9 @@ import '../color_scheme/color_code.dart';
 
 final class MyTheme {
   static final theme = ThemeData(
+    splashFactory: NoSplash.splashFactory,
+    splashColor: Colors.transparent,
+    highlightColor: Colors.transparent,
     iconTheme: IconThemeData(
       color: ColorCode.primaryColor,
       size: 24,
@@ -22,7 +25,13 @@ final class MyTheme {
       filled: false,
       fillColor: ColorCode.bgColor,
     ),
-    filledButtonTheme: FilledButtonThemeData(
+    textButtonTheme: TextButtonThemeData(
+      style: ButtonStyle(
+        // ✨ 關鍵修正：明確地將 TextButton 的覆蓋顏色設為透明
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
       style: ButtonStyle(
         // ✨ Use resolveWith to handle different states
         backgroundColor: WidgetStateProperty.resolveWith<Color?>(
@@ -53,6 +62,9 @@ final class MyTheme {
             return 2; // Default elevation
           },
         ),
+        side: WidgetStateProperty.all(BorderSide.none),
+        // ✨ 關鍵修正：將覆蓋顏色也設為透明，徹底根除所有點擊效果
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
         padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
           const EdgeInsets.symmetric(horizontal: 16),
         ),

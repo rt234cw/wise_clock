@@ -1,8 +1,9 @@
 // lib/views/main_record_view/clock_action_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:wise_clock/bloc/dashboard_bloc.dart';
-import 'package:wise_clock/bloc/dashboard_event.dart';
+// ✨ 1. 引入我們需要的 RecordBloc 和 RecordEvent
+import 'package:wise_clock/bloc/record_bloc.dart';
+import 'package:wise_clock/bloc/record_event.dart';
 import 'package:wise_clock/datetime_id_extension.dart';
 import 'package:wise_clock/model/editing_target.dart';
 import 'package:wise_clock/views/duty_record_text.dart';
@@ -14,7 +15,6 @@ class ClockActionCard extends StatelessWidget {
   final bool isEditing;
   final DateTime? clockInTime;
   final DateTime? clockOutTime;
-  // ✨ 1. 新增 leaveDuration 參數，讓這個 Widget 知道請假狀態
   final double? leaveDuration;
   final ValueChanged<EditingTarget> onToggleEdit;
 
@@ -24,14 +24,13 @@ class ClockActionCard extends StatelessWidget {
     required this.isEditing,
     this.clockInTime,
     this.clockOutTime,
-    // ✨ 2. 將 leaveDuration 加入建構函式
     this.leaveDuration,
     required this.onToggleEdit,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<DashboardBloc>();
+    // ✨ 我們不再需要在 build 的頂層讀取 bloc，因為會在各自的方法中按需讀取
     final relevantTime = (cardType == EditingTarget.clockIn) ? clockInTime : clockOutTime;
     final title = (cardType == EditingTarget.clockIn) ? "上班時間" : "下班時間";
 
@@ -49,22 +48,23 @@ class ClockActionCard extends StatelessWidget {
                   DutyRecordText(timeRecord: relevantTime?.hmsFormatted),
                 ],
               ),
-              _buildButtons(context, bloc),
+              _buildButtons(context),
             ],
           ),
           AnimatedSize(
             duration: const Duration(milliseconds: 300),
-            child: isEditing ? _buildInputSection(context, bloc) : const SizedBox.shrink(),
+            child: isEditing ? _buildInputSection(context) : const SizedBox.shrink(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildButtons(BuildContext context, DashboardBloc bloc) {
-    // ✨ 3. 關鍵修正：現在可以直接使用傳入的 leaveDuration
+  Widget _buildButtons(BuildContext context) {
+    // ✨ 2. 在需要發送「寫入」事件的地方，明確地讀取 RecordBloc
+    final recordBloc = context.read<RecordBloc>();
+
     if ((leaveDuration ?? 0.0) == 8.0) {
-      // 如果是整天請假，則不顯示任何按鈕
       return const SizedBox.shrink();
     }
 
@@ -77,12 +77,14 @@ class ClockActionCard extends StatelessWidget {
         TextButton(onPressed: () => onToggleEdit(cardType), child: const Text("手動輸入")),
         const SizedBox(width: 8),
         FilledButton(
+            // ✨ ElevatedButton -> FilledButton 保持風格一致
             onPressed: () {
               final now = DateTime.now();
               if (cardType == EditingTarget.clockIn) {
-                bloc.add(ClockInTimeSubmitted(clockInTime: now));
+                // ✨ 將事件發送給 RecordBloc，並使用正確的參數名 `time`
+                recordBloc.add(ClockInTimeSubmitted(now));
               } else {
-                bloc.add(ClockOutTimeSubmitted(clockOutTime: now));
+                recordBloc.add(ClockOutTimeSubmitted(now));
               }
             },
             child: const Text("快速打卡")),
@@ -92,7 +94,10 @@ class ClockActionCard extends StatelessWidget {
     }
   }
 
-  Widget _buildInputSection(BuildContext context, DashboardBloc bloc) {
+  Widget _buildInputSection(BuildContext context) {
+    // ✨ 同樣，在需要發送「寫入」事件的地方，明確地讀取 RecordBloc
+    final recordBloc = context.read<RecordBloc>();
+
     late ({int hour, int min, int sec}) pickedTime;
     final relevantTime = (cardType == EditingTarget.clockIn) ? clockInTime : clockOutTime;
 
@@ -111,14 +116,16 @@ class ClockActionCard extends StatelessWidget {
             Row(children: [
               TextButton(onPressed: () => onToggleEdit(cardType), child: const Text("取消")),
               FilledButton(
+                // ✨ ElevatedButton -> FilledButton 保持風格一致
                 onPressed: () {
                   final now = DateTime.now();
                   final newTime =
                       DateTime(now.year, now.month, now.day, pickedTime.hour, pickedTime.min, pickedTime.sec);
                   if (cardType == EditingTarget.clockIn) {
-                    bloc.add(ClockInTimeSubmitted(clockInTime: newTime));
+                    // ✨ 將事件發送給 RecordBloc，並使用正確的參數名 `time`
+                    recordBloc.add(ClockInTimeSubmitted(newTime));
                   } else {
-                    bloc.add(ClockOutTimeSubmitted(clockOutTime: newTime));
+                    recordBloc.add(ClockOutTimeSubmitted(newTime));
                   }
                   onToggleEdit(cardType); // 操作完成後關閉編輯模式
                 },
