@@ -27,14 +27,20 @@ class WeekDiffTimeCard extends StatelessWidget {
         BlocBuilder<DashboardBloc, DashboardState>(
           buildWhen: (previous, current) => previous.thisWeekRecords != current.thisWeekRecords,
           builder: (context, state) {
+            // ✨ 關鍵修正：在計算前，先篩選出週一到週五的紀錄
+            final weekdayRecords = state.thisWeekRecords.where((record) {
+              final weekday = record.clockInTime.weekday;
+              return weekday >= DateTime.monday && weekday <= DateTime.friday;
+            }).toList();
+
             // 1. 宣告一個變數來累加本週的總認定工時
             Duration totalRecognizedDuration = Duration.zero;
 
-            // 2. 遍歷本週的每一筆紀錄
-            for (final ClockRecord record in state.thisWeekRecords) {
+            // 2. ✨ 遍歷篩選後的列表 (weekdayRecords)
+            for (final ClockRecord record in weekdayRecords) {
               Duration dailyTotal;
 
-              // 3. ✨ 關鍵：檢查是否為「整天請假」的特殊情況
+              // 3. 檢查是否為「整天請假」的特殊情況
               if (record.leaveDuration == 8.0) {
                 // 如果是，直接將當日認定工時視為 8 小時
                 dailyTotal = const Duration(hours: 8);
@@ -42,10 +48,8 @@ class WeekDiffTimeCard extends StatelessWidget {
                 // 4. 否則，執行正常的詳細計算
                 Duration dailyNetWorkDuration = Duration.zero;
 
-                // 計算實際在公司工時
                 if (record.clockOutTime != null) {
                   final grossDuration = record.clockOutTime!.difference(record.clockInTime);
-
                   Duration breakToSubtract;
                   if (record.offDuration != null) {
                     breakToSubtract = Duration(seconds: (record.offDuration! * 3600).round());
@@ -55,21 +59,17 @@ class WeekDiffTimeCard extends StatelessWidget {
                   dailyNetWorkDuration = grossDuration - breakToSubtract;
                 }
 
-                // 加上請假時數
                 final leaveInHours = record.leaveDuration ?? 0.0;
                 final leaveDuration = Duration(seconds: (leaveInHours * 3600).round());
-
                 dailyTotal = dailyNetWorkDuration + leaveDuration;
               }
 
-              // 累加當日的總認定工時，並確保不為負數
               totalRecognizedDuration += dailyTotal.isNegative ? Duration.zero : dailyTotal;
             }
 
             // --- 接下來的計算和顯示邏輯 ---
             final difference = totalRecognizedDuration - standardWeekWorkDuration;
 
-            final isNegative = difference.isNegative;
             final absSeconds = difference.inSeconds.abs();
             final hours = absSeconds ~/ 3600;
             final minutes = (absSeconds % 3600) ~/ 60;

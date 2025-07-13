@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:wise_clock/views/share_ui_components/shared_container.dart';
 import '../../bloc/bloc_barrel.dart';
 import '../../color_scheme/color_code.dart';
-import 'package:wise_clock/hive/clock_record.dart'; // 確保引入 ClockRecord
 
 class TodayDiffTimeCard extends StatelessWidget {
   const TodayDiffTimeCard({super.key});
@@ -67,7 +66,6 @@ class TodayDiffTimeCard extends StatelessWidget {
             // --- 接下來的計算和顯示邏輯保持不變 ---
             final difference = totalRecognizedDuration - standardDayWorkDuration;
 
-            final isNegative = difference.isNegative;
             final absSeconds = difference.inSeconds.abs();
             final hours = absSeconds ~/ 3600;
             final minutes = (absSeconds % 3600) ~/ 60;

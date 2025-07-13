@@ -31,3 +31,11 @@ class LeaveDurationSubmitted extends RecordEvent {
   @override
   List<Object> get props => [hours];
 }
+
+class RecordDeleted extends RecordEvent {
+  final String id;
+  const RecordDeleted(this.id);
+
+  @override
+  List<Object> get props => [id];
+}

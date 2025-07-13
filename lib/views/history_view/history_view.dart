@@ -16,31 +16,23 @@ class HistoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✨ 使用 BlocProvider 來創建和提供 HistoryBloc
+    // ✨ 在頂層提供 HistoryBloc
     return BlocProvider(
       create: (context) => HistoryBloc(context.read<DashboardRepository>())
         // ✨ 在創建後立刻觸發一次讀取當前月份資料的事件
         ..add(MonthChanged(DateTime.now())),
       child: BlocBuilder<HistoryBloc, HistoryState>(
         builder: (context, state) {
+          if (state.status == HistoryStatus.initial) {
+            context.read<HistoryBloc>().add(MonthChanged(DateTime.now()));
+          }
           return Column(
             children: [
+              _CalendarHeader(state: state),
               _buildCalendar(context, state),
-              const SizedBox(height: 16.0),
+              const SizedBox(height: 8.0),
               const Divider(height: 1, thickness: 1),
-              const SizedBox(height: 16.0),
-              HistoryDetailCard(
-                  detailInfo: state.selectedDayRecord == null
-                      ? null
-                      : [
-                          {
-                            "日期:": DateFormat('yyyy/MM/dd E', 'zh_TW').format(state.selectedDayRecord!.clockInTime),
-                          },
-                          {"上班時間:": state.selectedDayRecord!.clockInTime.format('HH:mm:ss')},
-                          {"下班時間:": state.selectedDayRecord!.clockOutTime?.format('HH:mm:ss') ?? '尚未打卡'},
-                          {"請假時數:": "${(state.selectedDayRecord!.leaveDuration?.toInt()) ?? 0} 小時"},
-                        ]),
-              // _buildRecordDetails(context, state.selectedDayRecord),
+              Expanded(child: _buildRecordDetails(context, state.selectedDayRecord)),
             ],
           );
         },
@@ -51,15 +43,37 @@ class HistoryView extends StatelessWidget {
   // 建立日曆的 Widget
   Widget _buildCalendar(BuildContext context, HistoryState state) {
     final bloc = context.read<HistoryBloc>();
+    final now = DateTime.now();
 
     return TableCalendar<ClockRecord>(
       locale: 'zh_TW',
       firstDay: DateTime.utc(2020, 1, 1),
-      lastDay: DateTime.utc(2030, 12, 31),
+      lastDay: now,
       focusedDay: state.focusedMonth,
-      headerStyle: const HeaderStyle(
+      sixWeekMonthsEnforced: true,
+      daysOfWeekHeight: 32,
+      rowHeight: 48,
+      headerVisible: false,
+      calendarStyle: CalendarStyle(
+        // ✨ 1. 設定選中日期的背景樣式
+        selectedDecoration: BoxDecoration(
+          color: Theme.of(context).primaryColor, // 使用 App 的主題色
+          shape: BoxShape.circle,
+        ),
+        // ✨ 2. 設定選中日期的文字樣式
+        selectedTextStyle: const TextStyle(color: Colors.white),
+
+        // (可選) 您也可以設定今天日期的樣式
+        todayDecoration: BoxDecoration(
+          color: Theme.of(context).primaryColor.withValues(alpha: .5),
+          shape: BoxShape.rectangle,
+        ),
+        todayTextStyle: const TextStyle(color: Colors.white),
+      ),
+      headerStyle: HeaderStyle(
         formatButtonVisible: false, // 隱藏「兩週/月份」切換按鈕
         titleCentered: true,
+        rightChevronVisible: !(state.focusedMonth.year == now.year && state.focusedMonth.month == now.month),
       ),
       selectedDayPredicate: (day) => isSameDay(state.selectedDay, day),
       onDaySelected: (selectedDay, focusedDay) {
@@ -67,15 +81,18 @@ class HistoryView extends StatelessWidget {
         bloc.add(DaySelected(selectedDay));
       },
       onPageChanged: (focusedDay) {
+        // 雖然 lastDay 和 headerStyle 已經做了限制，
+        // 但這是一個額外的保險，防止用戶透過某些方式滑動到未來
+        if (focusedDay.isAfter(now)) {
+          return;
+        }
         // 當使用者滑動月份時，發送 MonthChanged 事件
         bloc.add(MonthChanged(focusedDay));
       },
-      // ✨ eventLoader 會為每一天尋找對應的事件（打卡紀錄）
       eventLoader: (day) {
         return state.recordsForMonth.where((record) => isSameDay(record.clockInTime, day)).toList();
       },
       calendarBuilders: CalendarBuilders(
-        // ✨ 當某天有事件（打卡紀錄）時，在其下方繪製一個小點
         markerBuilder: (context, date, events) {
           if (events.isNotEmpty) {
             return Positioned(
@@ -84,9 +101,9 @@ class HistoryView extends StatelessWidget {
               child: Container(
                 width: 6,
                 height: 6,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.deepOrange,
+                  color: Theme.of(context).primaryColor,
                 ),
               ),
             );
@@ -97,46 +114,108 @@ class HistoryView extends StatelessWidget {
     );
   }
 
-  // 建立顯示打卡紀錄詳情的 Widget
-  // Widget _buildRecordDetails(BuildContext context, ClockRecord? record) {
-  //   if (record == null) {
-  //     return const Expanded(
-  //       child: Center(child: Text("請選擇有紀錄的日期來查看詳情")),
-  //     );
-  //   }
-
-  //   return Expanded(
-  //     child: ListView(
-  //       physics: const BouncingScrollPhysics(),
-  //       padding: const EdgeInsets.symmetric(horizontal: 16),
-  //       children: [
-  //         _buildDetailRow("日期:", DateFormat('yyyy/MM/dd E', 'zh_TW').format(record.clockInTime)),
-  //         _buildDetailRow("上班時間:", record.clockInTime.format('HH:mm:ss')),
-  //         _buildDetailRow("下班時間:", record.clockOutTime?.format('HH:mm:ss') ?? '尚未打卡'),
-  //         _buildDetailRow("請假時數:", "${(record.leaveDuration?.toInt()) ?? 0} 小時"),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // 輔助 Widget，用於建立每一行的詳情
-  // Widget _buildDetailRow(String label, String value) {
-  //   return Padding(
-  //     padding: const EdgeInsets.symmetric(vertical: 8.0),
-  //     child: Row(
-  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //       children: [
-  //         Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-  //         Text(value),
-  //       ],
-  //     ),
-  //   );
-  // }
+  // ✨ 建立顯示打卡紀錄詳情的 Widget (修正後)
+  Widget _buildRecordDetails(BuildContext context, ClockRecord? record) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      // ✨ 為了更平滑的切換效果，我們可以自訂 transitionBuilder
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: child,
+        );
+      },
+      child: record == null
+          // ✨ 關鍵修正：使用 Container 替代 Center
+          ? Container(
+              // ✨ 使用 ValueKey 來幫助 AnimatedSwitcher 識別不同的 Widget
+              key: const ValueKey('empty-placeholder'),
+              // ✨ 明確地讓 Container 填滿所有可用空間
+              width: double.infinity,
+              height: double.infinity,
+              // ✨ 並將其子元件（Text）置中
+              alignment: Alignment.center,
+              child: const Text("請選擇有紀錄的日期"),
+            )
+          : SingleChildScrollView(
+              child: HistoryDetailCard(
+                key: ValueKey(record.id),
+                record: record,
+              ),
+            ),
+    );
+  }
 }
 
-// 為了方便格式化，可以為 DateTime 寫一個擴展
-extension DateTimeFormat on DateTime {
-  String format(String pattern) {
-    return DateFormat(pattern).format(this);
+// 輔助函數
+bool isSameDay(DateTime? a, DateTime? b) {
+  if (a == null || b == null) {
+    return false;
+  }
+  return a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+class _CalendarHeader extends StatelessWidget {
+  final HistoryState state;
+  const _CalendarHeader({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = context.read<HistoryBloc>();
+    final headerText = DateFormat.yMMM('zh_TW').format(state.focusedMonth);
+    final now = DateTime.now();
+
+    // ✨ 關鍵修正：將判斷邏輯分開
+    // 規則 1：是否正在瀏覽當前月份？
+    final bool isViewingCurrentMonth = state.focusedMonth.year == now.year && state.focusedMonth.month == now.month;
+
+    // 規則 2：是否顯示「回到今天」按鈕？(只要不在當前月份就顯示)
+    final bool showTodayButton = !isViewingCurrentMonth;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      child: Row(
+        children: [
+          // 月份標題
+          Text(
+            headerText,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const Spacer(),
+
+          // ✨ 「回到今天」按鈕，根據 showTodayButton 決定是否顯示
+          if (showTodayButton)
+            TextButton(
+              onPressed: () {
+                bloc.add(DaySelected(DateTime.now()));
+              },
+              child: const Text("今天"),
+            ),
+
+          // 上一個月按鈕
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: () {
+              final prevMonth = DateTime(state.focusedMonth.year, state.focusedMonth.month - 1);
+              bloc.add(MonthChanged(prevMonth));
+            },
+          ),
+
+          // ✨ 下一個月按鈕，根據 isViewingCurrentMonth 決定是否禁用
+          IconButton(
+            icon: Icon(
+              Icons.chevron_right,
+              color: isViewingCurrentMonth ? Colors.grey : Colors.black,
+            ),
+            onPressed: isViewingCurrentMonth
+                ? null // 如果是當前月份，就禁用按鈕
+                : () {
+                    final nextMonth = DateTime(state.focusedMonth.year, state.focusedMonth.month + 1);
+                    bloc.add(MonthChanged(nextMonth));
+                  },
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -1,8 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:wise_clock/model/dashboard_repository.dart';
 
-import '../hive/clock_record.dart';
-
 /// 這裡就是UI層的邏輯，也就是User的Intent（意圖）   -> Intent
 /// 用戶從UI層告訴Bloc（業務邏輯層）我現在要做這件事情 -> ViewModel
 /// Bloc會把任務分派給Model                       -> Model

@@ -121,7 +121,7 @@ class _LeaveCardState extends State<LeaveCard> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("請假/公出時數", style: Theme.of(context).textTheme.titleMedium),
+            Text("請假時數", style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(
               savedHours == 0 ? "未請假" : "${savedHours.toInt()} 小時",
@@ -151,55 +151,76 @@ class _LeaveCardState extends State<LeaveCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text("請假/公出時數", style: Theme.of(context).textTheme.titleMedium),
+        Text("請假時數", style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton2<double>(
-                  value: _selectedHours,
-                  hint: Text("請先打卡以選擇時數", style: TextStyle(fontSize: 14, color: Theme.of(context).hintColor)),
-                  items: List.generate(9, (i) => i.toDouble())
-                      .map((h) => DropdownMenuItem(value: h, child: Text(h == 0 ? "未請假" : "${h.toInt()} 小時")))
-                      .toList(),
-                  onChanged: isDayStarted ? (v) => setState(() => _selectedHours = v) : null,
+            DropdownButtonHideUnderline(
+              child: DropdownButton2<double>(
+                isExpanded: true,
+                value: _selectedHours,
+                buttonStyleData: ButtonStyleData(
+                  width: 120,
+                  height: 40,
+                  // width: 180,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).cardColor,
+                    border: Border.all(color: Theme.of(context).dividerColor),
+                  ),
                 ),
+                dropdownStyleData: DropdownStyleData(
+                  maxHeight: 200,
+                  padding: EdgeInsets.zero,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).cardColor,
+                  ),
+                ),
+                items: List.generate(9, (i) => i.toDouble())
+                    .map((h) => DropdownMenuItem(value: h, child: Text(h == 0 ? "未請假" : "${h.toInt()} 小時")))
+                    .toList(),
+                onChanged: isDayStarted ? (v) => setState(() => _selectedHours = v) : null,
               ),
             ),
             const SizedBox(width: 8),
-            const Text("整天"),
-            Switch.adaptive(
-              value: _selectedHours == 8.0,
-              onChanged: (v) => setState(() => _selectedHours = v == true ? 8.0 : 0.0),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            // ✨ 如果是從「調整」按鈕進來的，才顯示「取消」按鈕
-            if (isDayStarted)
-              TextButton(
-                  onPressed: () => setState(() {
-                        _isEditing = false;
-                        _selectedHours = null; // 取消時重置選擇
-                      }),
-                  child: const Text("取消")),
-            const SizedBox(width: 8),
-            FilledButton(
-              onPressed: isButtonEnabled
-                  ? () {
-                      if (_selectedHours == 8.0 && todayRecord?.clockOutTime != null) {
-                        _showConfirmationDialog();
-                      } else {
-                        recordBloc.add(LeaveDurationSubmitted(_selectedHours!));
-                        // 提交後，讓 BlocListener 來處理狀態重置，這裡不再需要 setState
-                      }
-                    }
-                  : null,
-              child: const Text("登記"),
+            Row(
+              children: [
+                const Text("整天"),
+                Switch.adaptive(
+                  value: _selectedHours == 8.0,
+                  onChanged: (v) => setState(() => _selectedHours = v == true ? 8.0 : 0.0),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  children: [
+                    // ✨ 如果是從「調整」按鈕進來的，才顯示「取消」按鈕
+                    if (isDayStarted)
+                      TextButton(
+                          onPressed: () => setState(() {
+                                _isEditing = false;
+                                _selectedHours = null; // 取消時重置選擇
+                              }),
+                          child: const Text("取消")),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: isButtonEnabled
+                          ? () {
+                              if (_selectedHours == 8.0 && todayRecord?.clockOutTime != null) {
+                                _showConfirmationDialog();
+                              } else {
+                                recordBloc.add(LeaveDurationSubmitted(_selectedHours!));
+                                // 提交後，讓 BlocListener 來處理狀態重置，這裡不再需要 setState
+                              }
+                            }
+                          : null,
+                      child: const Text("登記"),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),

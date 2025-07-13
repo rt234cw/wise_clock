@@ -7,6 +7,8 @@ import 'package:wise_clock/bloc/history_state.dart';
 import 'package:wise_clock/hive/clock_record.dart';
 import 'package:wise_clock/model/dashboard_repository.dart';
 
+import '../views/history_view/history_view.dart';
+
 // ✨ 1. 我們同樣需要一個私有事件，來處理從資料庫來的更新
 class _HistoryRecordsUpdated extends HistoryEvent {
   final List<ClockRecord> records;
@@ -38,7 +40,17 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   void _onRecordsUpdated(_HistoryRecordsUpdated event, Emitter<HistoryState> emit) {
     // 根據當前 state 中聚焦的月份，重新篩選資料
     final recordsForMonth = _filterRecordsForMonth(event.records, state.focusedMonth);
-    emit(state.copyWith(status: HistoryStatus.success, recordsForMonth: recordsForMonth));
+    bool selectedDayStillExists = false;
+    if (state.selectedDay != null) {
+      selectedDayStillExists = event.records.any((r) => isSameDay(r.clockInTime, state.selectedDay));
+    }
+
+    emit(state.copyWith(
+      status: HistoryStatus.success,
+      recordsForMonth: recordsForMonth,
+      // 如果選中的日期被刪除了，就清除選擇；否則，保持不變
+      clearSelectedDay: !selectedDayStillExists,
+    ));
   }
 
   // 當使用者在 UI 上滑動月份時
@@ -52,6 +64,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     emit(state.copyWith(
       focusedMonth: event.focusedMonth,
       recordsForMonth: recordsForMonth,
+      clearSelectedDay: true,
     ));
   }
 

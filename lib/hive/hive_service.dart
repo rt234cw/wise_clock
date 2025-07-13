@@ -14,7 +14,7 @@ class HiveService {
     }
 
     // ✨ 關鍵修正：在開發完成後，務必移除或註解掉這行，否則每次都會清空資料庫！
-    await Hive.deleteBoxFromDisk('clockInRecords');
+    // await Hive.deleteBoxFromDisk('clockInRecords');
 
     // 打開 Box
     await Hive.openBox<ClockRecord>("clockInRecords");

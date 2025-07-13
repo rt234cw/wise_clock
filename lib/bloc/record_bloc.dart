@@ -8,16 +8,16 @@ import 'package:wise_clock/delayed_result.dart';
 import 'package:wise_clock/hive/clock_record.dart';
 import 'package:wise_clock/model/dashboard_repository.dart';
 
-final _uuid = Uuid();
-
 class RecordBloc extends Bloc<RecordEvent, RecordState> {
   final DashboardRepository _repo;
+  final _uuid = Uuid();
 
   // ✨ 關鍵修正 1：在 super() 中使用正確的參數名稱 `submissionStatus`
   RecordBloc(this._repo) : super(RecordState(submissionStatus: DelayedResult.idle())) {
     on<ClockInTimeSubmitted>(_onClockInTimeSubmitted);
     on<ClockOutTimeSubmitted>(_onClockOutTimeSubmitted);
     on<LeaveDurationSubmitted>(_onLeaveDurationSubmitted);
+    on<RecordDeleted>(_onRecordDeleted);
   }
 
   Future<void> _onClockInTimeSubmitted(
@@ -119,6 +119,19 @@ class RecordBloc extends Bloc<RecordEvent, RecordState> {
           await _repo.createRecord(newRecord);
         }
       }
+      emit(state.copyWith(submissionStatus: DelayedResult.success(null)));
+    } catch (e) {
+      emit(state.copyWith(submissionStatus: DelayedResult.failure(e.toString())));
+    }
+  }
+
+  Future<void> _onRecordDeleted(
+    RecordDeleted event,
+    Emitter<RecordState> emit,
+  ) async {
+    emit(state.copyWith(submissionStatus: DelayedResult.loading()));
+    try {
+      await _repo.deleteRecord(event.id);
       emit(state.copyWith(submissionStatus: DelayedResult.success(null)));
     } catch (e) {
       emit(state.copyWith(submissionStatus: DelayedResult.failure(e.toString())));
