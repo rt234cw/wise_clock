@@ -1,7 +1,10 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wise_clock/bloc/record_bloc.dart';
 
+import '../../bloc/record_event.dart';
 import '../../generated/l10n.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -19,11 +22,15 @@ class SettingsView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          ".System",
+          S.current.system,
           style: Theme.of(context).textTheme.labelLarge,
         ),
         Container(
-          decoration: BoxDecoration(color: Colors.amber.withAlpha(100)),
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -39,11 +46,15 @@ class SettingsView extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          ".Calendar",
+          S.current.calendar,
           style: Theme.of(context).textTheme.labelLarge,
         ),
         Container(
-          decoration: BoxDecoration(color: Colors.amber.withAlpha(100)),
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
             spacing: 8,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -52,7 +63,7 @@ class SettingsView extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _getIconTitle(
-                    title: ".顯示週末",
+                    title: S.current.showWeekend,
                     iconData: Icons.weekend_rounded,
                   ),
                   Switch.adaptive(
@@ -65,7 +76,7 @@ class SettingsView extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _getIconTitle(
-                    title: ".每月固定顯示六週",
+                    title: S.current.alwaysSixWeeks,
                     iconData: Icons.looks_6_rounded,
                   ),
                   Switch.adaptive(
@@ -79,11 +90,15 @@ class SettingsView extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          ".Data",
+          S.current.data,
           style: Theme.of(context).textTheme.labelLarge,
         ),
         Container(
-          decoration: BoxDecoration(color: Colors.amber.withAlpha(100)),
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
             spacing: 8,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -93,13 +108,26 @@ class SettingsView extends StatelessWidget {
                 children: [
                   _getIconTitle(
                     title: S.current.clearAllRecords,
-                    iconData: Icons.warning_amber_rounded,
+                    iconData: Icons.event_busy_rounded,
                   ),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.red,
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.redAccent,
                     ),
-                    onPressed: () {},
+                    onPressed: () async {
+                      final confirmed = await _clearAllRecordsDialog(context);
+                      if (confirmed && context.mounted) {
+                        ScaffoldMessenger.of(context)
+                          ..removeCurrentSnackBar()
+                          ..showSnackBar(
+                            SnackBar(
+                              behavior: SnackBarBehavior.floating,
+                              content: Text(S.current.clearAll),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                      }
+                    },
                     label: Text(S.current.clear),
                     icon: Icon(Icons.delete_forever),
                   )
@@ -110,6 +138,57 @@ class SettingsView extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<bool> _clearAllRecordsDialog(BuildContext context) async {
+    bool isIos = Theme.of(context).platform == TargetPlatform.iOS;
+
+    final confirmed = await showAdaptiveDialog<bool?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog.adaptive(
+          title: Text(S.current.confirmAction),
+          content: Text(S.current.permanentlyDelete),
+          actions: [
+            if (isIos) ...[
+              CupertinoDialogAction(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: Text(S.current.cancel),
+              ),
+              CupertinoDialogAction(
+                isDestructiveAction: true,
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: Text(S.current.clearAll),
+              ),
+            ],
+            if (!isIos) ...[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: Text(S.current.cancel),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: Text(S.current.clearAll),
+              )
+            ]
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return false;
+    // 確認刪除後，發送清除所有紀錄的事件
+    if (context.mounted) context.read<RecordBloc>().add(AllRecordsDeleted());
+    return true;
   }
 
   Widget selectLanguage(BuildContext context) {

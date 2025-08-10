@@ -58,7 +58,7 @@ class _HistoryDetailCardState extends State<HistoryDetailCard> {
         ),
         CupertinoDialogAction(
           isDestructiveAction: true,
-          child: Text(S.current.update),
+          child: Text(S.current.delete),
           onPressed: () => Navigator.of(context).pop(true),
         ),
       ];
@@ -74,7 +74,7 @@ class _HistoryDetailCardState extends State<HistoryDetailCard> {
             foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
           ),
           onPressed: () => Navigator.of(context).pop(true),
-          child: Text(S.current.update),
+          child: Text(S.current.delete),
         ),
       ];
     }

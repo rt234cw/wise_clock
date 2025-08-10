@@ -24,11 +24,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adjust => 'Adjust';
 
   @override
+  String get alwaysSixWeeks => 'Always show 6 weeks';
+
+  @override
   String get areYouSureOverwrite =>
       'Are you sure to overwirte existing record?';
 
   @override
   String get balanced => 'Balanced';
+
+  @override
+  String get calendar => 'Calendar';
 
   @override
   String get cancel => 'Cancel';
@@ -40,7 +46,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearAll => 'Clear All';
 
   @override
-  String get clearAllRecords => 'Clear All Records';
+  String get clearAllRecords => 'Clear all records';
 
   @override
   String get clockIn => 'Clock In';
@@ -64,10 +70,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmAction => 'Confirm Action';
 
   @override
+  String get data => 'Data';
+
+  @override
   String get dataLoadingFailed => 'Data Loading Failed ';
 
   @override
   String get day => 'Day';
+
+  @override
+  String get delete => 'Delete';
 
   @override
   String get editRecord => 'Edit Record';
@@ -148,8 +160,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortage => 'Shortage';
 
   @override
+  String get showWeekend => 'Show Weekend';
+
+  @override
   String get sureToDeleteRecord =>
       'Are you sure you want to delete this record? This action cannot be undone.';
+
+  @override
+  String get system => 'System';
 
   @override
   String get takeLeave => 'Take Leave';

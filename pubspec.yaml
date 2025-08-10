@@ -2,7 +2,7 @@ name: wise_clock
 description: "A Flutter application for managing work hours and records."
 publish_to: 'none' 
 
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ^3.6.0

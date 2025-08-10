@@ -128,6 +128,12 @@ abstract class AppLocalizations {
   /// **'Adjust'**
   String get adjust;
 
+  /// No description provided for @alwaysSixWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Always show 6 weeks'**
+  String get alwaysSixWeeks;
+
   /// No description provided for @areYouSureOverwrite.
   ///
   /// In en, this message translates to:
@@ -139,6 +145,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Balanced'**
   String get balanced;
+
+  /// No description provided for @calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendar;
 
   /// No description provided for @cancel.
   ///
@@ -161,7 +173,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearAllRecords.
   ///
   /// In en, this message translates to:
-  /// **'Clear All Records'**
+  /// **'Clear all records'**
   String get clearAllRecords;
 
   /// No description provided for @clockIn.
@@ -206,6 +218,12 @@ abstract class AppLocalizations {
   /// **'Confirm Action'**
   String get confirmAction;
 
+  /// No description provided for @data.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get data;
+
   /// No description provided for @dataLoadingFailed.
   ///
   /// In en, this message translates to:
@@ -217,6 +235,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Day'**
   String get day;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
 
   /// No description provided for @editRecord.
   ///
@@ -338,11 +362,23 @@ abstract class AppLocalizations {
   /// **'Shortage'**
   String get shortage;
 
+  /// No description provided for @showWeekend.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Weekend'**
+  String get showWeekend;
+
   /// No description provided for @sureToDeleteRecord.
   ///
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this record? This action cannot be undone.'**
   String get sureToDeleteRecord;
+
+  /// No description provided for @system.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get system;
 
   /// No description provided for @takeLeave.
   ///

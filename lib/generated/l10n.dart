@@ -90,6 +90,16 @@ class S {
     return Intl.message('Adjust', name: 'adjust', desc: '', args: []);
   }
 
+  /// `Always show 6 weeks`
+  String get alwaysSixWeeks {
+    return Intl.message(
+      'Always show 6 weeks',
+      name: 'alwaysSixWeeks',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Are you sure to overwirte existing record?`
   String get areYouSureOverwrite {
     return Intl.message(
@@ -103,6 +113,11 @@ class S {
   /// `Balanced`
   String get balanced {
     return Intl.message('Balanced', name: 'balanced', desc: '', args: []);
+  }
+
+  /// `Calendar`
+  String get calendar {
+    return Intl.message('Calendar', name: 'calendar', desc: '', args: []);
   }
 
   /// `Cancel`
@@ -120,10 +135,10 @@ class S {
     return Intl.message('Clear All', name: 'clearAll', desc: '', args: []);
   }
 
-  /// `Clear All Records`
+  /// `Clear all records`
   String get clearAllRecords {
     return Intl.message(
-      'Clear All Records',
+      'Clear all records',
       name: 'clearAllRecords',
       desc: '',
       args: [],
@@ -180,6 +195,11 @@ class S {
     );
   }
 
+  /// `Data`
+  String get data {
+    return Intl.message('Data', name: 'data', desc: '', args: []);
+  }
+
   /// `Data Loading Failed `
   String get dataLoadingFailed {
     return Intl.message(
@@ -193,6 +213,11 @@ class S {
   /// `Day`
   String get day {
     return Intl.message('Day', name: 'day', desc: '', args: []);
+  }
+
+  /// `Delete`
+  String get delete {
+    return Intl.message('Delete', name: 'delete', desc: '', args: []);
   }
 
   /// `Edit Record`
@@ -349,6 +374,16 @@ class S {
     return Intl.message('Shortage', name: 'shortage', desc: '', args: []);
   }
 
+  /// `Show Weekend`
+  String get showWeekend {
+    return Intl.message(
+      'Show Weekend',
+      name: 'showWeekend',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Are you sure you want to delete this record? This action cannot be undone.`
   String get sureToDeleteRecord {
     return Intl.message(
@@ -357,6 +392,11 @@ class S {
       desc: '',
       args: [],
     );
+  }
+
+  /// `System`
+  String get system {
+    return Intl.message('System', name: 'system', desc: '', args: []);
   }
 
   /// `Take Leave`

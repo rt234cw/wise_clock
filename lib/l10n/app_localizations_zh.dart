@@ -24,10 +24,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adjust => '調整';
 
   @override
+  String get alwaysSixWeeks => '永遠顯示六週';
+
+  @override
   String get areYouSureOverwrite => '確認要覆蓋原有紀錄嗎？';
 
   @override
   String get balanced => '正好';
+
+  @override
+  String get calendar => '月曆';
 
   @override
   String get cancel => '取消';
@@ -63,10 +69,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get confirmAction => '再次確認';
 
   @override
+  String get data => '資料';
+
+  @override
   String get dataLoadingFailed => '讀取資料失敗';
 
   @override
   String get day => '星期';
+
+  @override
+  String get delete => '刪除';
 
   @override
   String get editRecord => '編輯紀錄';
@@ -133,7 +145,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shortage => '短缺';
 
   @override
+  String get showWeekend => '顯示週末';
+
+  @override
   String get sureToDeleteRecord => '您確定要刪除這筆打卡紀錄嗎？此操作無法復原。';
+
+  @override
+  String get system => '系統';
 
   @override
   String get takeLeave => '請假';
