@@ -1,22 +1,19 @@
-import 'rive_model.dart';
+import 'package:flutter/material.dart';
 
 class Menu {
   final String title;
-  final RiveModel rive;
   final String route;
+  final IconData iconData;
 
-  const Menu({required this.title, required this.rive, required this.route});
+  const Menu({
+    required this.title,
+    required this.route,
+    required this.iconData,
+  });
 }
 
 List<Menu> bottomNavItems = [
-  Menu(
-    title: "Home",
-    rive: RiveModel(src: "assets/RiveAssets/icons.riv", artboard: "HOME", stateMachineName: "HOME_interactivity"),
-    route: "/",
-  ),
-  Menu(
-    title: "Timer",
-    rive: RiveModel(src: "assets/RiveAssets/icons.riv", artboard: "TIMER", stateMachineName: "TIMER_Interactivity"),
-    route: "/history",
-  ),
+  Menu(title: 'landing', route: '/', iconData: Icons.home_rounded),
+  Menu(title: 'history', route: '/history', iconData: Icons.history_rounded),
+  Menu(title: 'profile', route: '/profile', iconData: Icons.settings_rounded),
 ];

@@ -52,4 +52,8 @@ final class DashboardRepository {
   List<ClockRecord> getAllRecordsNow() {
     return _box.values.toList();
   }
+
+  Future<void> deleteAllRecords() async {
+    await _box.clear();
+  }
 }

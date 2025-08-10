@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wise_clock/color_scheme/color_code.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+import 'package:wise_clock/generated/l10n.dart';
+
+import '../providers/locale_provider.dart';
 import 'btm_nav_item.dart';
 import 'menu.dart';
-import 'rive_utils.dart';
 
 class LandingView extends StatefulWidget {
   final Widget child;
@@ -22,11 +26,6 @@ class _LandingViewState extends State<LandingView> with SingleTickerProviderStat
   Menu selectedBottonNav = bottomNavItems.first;
 
   late final DateTime todayDate;
-
-  String get todayDateString {
-    const List<String> weekdays = ['一', '二', '三', '四', '五', '六', '日'];
-    return "${todayDate.month}月${todayDate.day}日 星期${weekdays[todayDate.weekday - 1]}";
-  }
 
   @override
   void initState() {
@@ -61,71 +60,72 @@ class _LandingViewState extends State<LandingView> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFFF1F5F9), // 更深的藍黑色
+    final bool isAppBarVisible = selectedBottonNav == bottomNavItems[0] || selectedBottonNav == bottomNavItems[2];
+    final colorScheme = Theme.of(context).colorScheme;
 
-        // gradient: LinearGradient(
-        //   begin: Alignment.topCenter,
-        //   end: Alignment.bottomCenter,
-        //   colors: [
-        //     Color(0xFFFFFFFF),
-        //     Color(0xFFF8FAFC),
-        //   ],
-        // ),
+    String appBarTitle = '';
+    if (isAppBarVisible) {
+      if (selectedBottonNav == bottomNavItems[0]) {
+        // 如果是第一個分頁，顯示日期
+        final locale = context.watch<LocaleProvider>().locale?.toString() ?? "zh_TW";
+        appBarTitle = DateFormat.yMMMMEEEEd(locale).format(DateTime.now());
+      } else if (selectedBottonNav == bottomNavItems[2]) {
+        // 如果是第三個分頁，顯示「設定」的翻譯
+        appBarTitle = S.of(context).settings;
+      }
+    }
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      appBar: isAppBarVisible ? _buildAppBar(appBarTitle, context) : null,
+      bottomNavigationBar: Transform.translate(
+        offset: Offset(0, 100 * animation.value),
+        child: SafeArea(
+          child: _floattingBtmNavBar(context),
+        ),
       ),
-      child: Scaffold(
-        // backgroundColor: Color(0xFFF2F6FF),
-        backgroundColor: Colors.transparent,
-        extendBody: true,
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          centerTitle: false,
-          // backgroundColor: Color(0xFFF2F6FF),
-          backgroundColor: Colors.transparent,
-          // surfaceTintColor: Color(0xFFF2F6FF),
-          surfaceTintColor: Colors.transparent,
-          // shadowColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          title: Text(todayDateString),
-          titleSpacing: 24,
-          titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: ColorCode.primaryColor,
-                fontWeight: FontWeight.w600,
-              ),
-          systemOverlayStyle: SystemUiOverlayStyle(
-            // Brightness.dark 會顯示深色圖示 (適用於 Android)
-            statusBarIconBrightness: Brightness.dark,
+      body: SafeArea(
+          child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: widget.child,
+      )),
+    );
+  }
 
-            // Brightness.light 表示狀態列背景是淺色的，因此圖示會是深色的 (適用於 iOS)
-            statusBarBrightness: Brightness.light,
+  AppBar _buildAppBar(String appTitle, BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return AppBar(
+      centerTitle: false,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+      title: Text(appTitle),
+      titleSpacing: 10,
+      titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
           ),
-        ),
-        bottomNavigationBar: Transform.translate(
-          offset: Offset(0, 100 * animation.value),
-          child: SafeArea(
-            child: _floattingBtmNavBar(context),
-          ),
-        ),
-        body: SafeArea(
-            child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: widget.child,
-        )),
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
     );
   }
 
   Widget _floattingBtmNavBar(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    // A slightly lighter version of the surface color for the nav bar
+
     return Container(
       padding: const EdgeInsets.only(left: 12, top: 12, right: 12, bottom: 12),
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: Color(0xFF17203A).withValues(alpha: 0.8),
+        color: colorScheme.surfaceContainer,
         borderRadius: const BorderRadius.all(Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFF17203A).withValues(alpha: 0.3),
+            color: Colors.black.withValues(alpha: 0.1),
             offset: const Offset(0, 20),
             blurRadius: 20,
           ),
@@ -143,12 +143,8 @@ class _LandingViewState extends State<LandingView> with SingleTickerProviderStat
                 press: () {
                   if (selectedBottonNav == navBar) return;
 
-                  RiveUtils.chnageSMIBoolState(navBar.rive.status!);
                   updateSelectedBtmNav(navBar);
                   context.go(navBar.route);
-                },
-                riveOnInit: (artboard) {
-                  navBar.rive.status = RiveUtils.getRiveInput(artboard, stateMachineName: navBar.rive.stateMachineName);
                 },
                 selectedNav: selectedBottonNav,
               );

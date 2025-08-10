@@ -1,5 +1,3 @@
-// lib/views/history_view/history_view.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -11,15 +9,26 @@ import 'package:wise_clock/hive/clock_record.dart';
 import 'package:wise_clock/model/dashboard_repository.dart';
 import 'package:wise_clock/views/history_view/history_detail_card.dart';
 
-class HistoryView extends StatelessWidget {
+import '../../generated/l10n.dart';
+import '../../providers/locale_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../common/edit_record_dialog.dart';
+
+class HistoryView extends StatefulWidget {
   const HistoryView({super.key});
 
   @override
+  State<HistoryView> createState() => _HistoryViewState();
+}
+
+class _HistoryViewState extends State<HistoryView> {
+  bool showWeekdays = true;
+  @override
   Widget build(BuildContext context) {
-    // ✨ 在頂層提供 HistoryBloc
+    // 在頂層提供 HistoryBloc
     return BlocProvider(
       create: (context) => HistoryBloc(context.read<DashboardRepository>())
-        // ✨ 在創建後立刻觸發一次讀取當前月份資料的事件
+        // 在創建後立刻觸發一次讀取當前月份資料的事件
         ..add(MonthChanged(DateTime.now())),
       child: BlocBuilder<HistoryBloc, HistoryState>(
         builder: (context, state) {
@@ -30,9 +39,9 @@ class HistoryView extends StatelessWidget {
             children: [
               _CalendarHeader(state: state),
               _buildCalendar(context, state),
-              const SizedBox(height: 8.0),
+              const SizedBox(height: 4.0),
               const Divider(height: 1, thickness: 1),
-              Expanded(child: _buildRecordDetails(context, state.selectedDayRecord)),
+              Expanded(child: _buildRecordDetails(context, state)),
             ],
           );
         },
@@ -44,31 +53,52 @@ class HistoryView extends StatelessWidget {
   Widget _buildCalendar(BuildContext context, HistoryState state) {
     final bloc = context.read<HistoryBloc>();
     final now = DateTime.now();
+    final settingProivder = context.watch<SettingsProvider>();
+    final bool showWeekdays = !settingProivder.showWeekend;
+    final bool sixWeekMonthsEnforced = settingProivder.showSixWeeks;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return TableCalendar<ClockRecord>(
-      locale: 'zh_TW',
+      locale: context.read<LocaleProvider>().locale?.languageCode ?? 'zh_TW',
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: now,
+      onlyWeekdays: showWeekdays,
       focusedDay: state.focusedMonth,
-      sixWeekMonthsEnforced: true,
+      sixWeekMonthsEnforced: sixWeekMonthsEnforced,
       daysOfWeekHeight: 32,
-      rowHeight: 48,
+      rowHeight: 36,
       headerVisible: false,
+      enabledDayPredicate: (day) => !day.isAfter(now),
       calendarStyle: CalendarStyle(
-        // ✨ 1. 設定選中日期的背景樣式
+        disabledTextStyle: TextStyle(
+          color: colorScheme.onSurface.withValues(alpha: 0.2),
+        ),
+        defaultTextStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.8)),
+        outsideTextStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.4)),
+        weekendTextStyle: TextStyle(color: colorScheme.secondary.withValues(alpha: 0.9)),
+        //  設定選中日期的背景樣式
         selectedDecoration: BoxDecoration(
-          color: Theme.of(context).primaryColor, // 使用 App 的主題色
+          color: colorScheme.primary, // 使用 App 的主題色
           shape: BoxShape.circle,
         ),
-        // ✨ 2. 設定選中日期的文字樣式
-        selectedTextStyle: const TextStyle(color: Colors.white),
-
-        // (可選) 您也可以設定今天日期的樣式
-        todayDecoration: BoxDecoration(
-          color: Theme.of(context).primaryColor.withValues(alpha: .5),
-          shape: BoxShape.rectangle,
+        //  設定選中日期的文字樣式
+        selectedTextStyle: TextStyle(
+          color: colorScheme.onPrimary, // Text color on top of the brand color
+          fontWeight: FontWeight.bold,
         ),
-        todayTextStyle: const TextStyle(color: Colors.white),
+        todayDecoration: BoxDecoration(
+          border: Border.all(color: colorScheme.secondary, width: 1.5),
+          shape: BoxShape.circle,
+        ),
+        todayTextStyle: TextStyle(
+          color: colorScheme.secondary, // Use accent color for 'today' text
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      daysOfWeekStyle: DaysOfWeekStyle(
+        // Style for the weekday labels (Mon, Tue, etc.)
+        weekdayStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6)),
+        weekendStyle: TextStyle(color: colorScheme.secondary.withValues(alpha: 0.8)),
       ),
       headerStyle: HeaderStyle(
         formatButtonVisible: false, // 隱藏「兩週/月份」切換按鈕
@@ -96,14 +126,15 @@ class HistoryView extends StatelessWidget {
         markerBuilder: (context, date, events) {
           if (events.isNotEmpty) {
             return Positioned(
-              right: 1,
-              bottom: 1,
+              // right: 1,
+              bottom: 2,
               child: Container(
-                width: 6,
-                height: 6,
+                width: 16,
+                height: 3,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Theme.of(context).primaryColor,
+                  borderRadius: BorderRadius.circular(30),
+                  // shape: BoxShape.circle,
+                  color: colorScheme.secondary,
                 ),
               ),
             );
@@ -114,11 +145,12 @@ class HistoryView extends StatelessWidget {
     );
   }
 
-  // ✨ 建立顯示打卡紀錄詳情的 Widget (修正後)
-  Widget _buildRecordDetails(BuildContext context, ClockRecord? record) {
+  Widget _buildRecordDetails(BuildContext context, HistoryState state) {
+    final record = state.selectedDayRecord;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
-      // ✨ 為了更平滑的切換效果，我們可以自訂 transitionBuilder
       transitionBuilder: (Widget child, Animation<double> animation) {
         return FadeTransition(
           opacity: animation,
@@ -126,16 +158,44 @@ class HistoryView extends StatelessWidget {
         );
       },
       child: record == null
-          // ✨ 關鍵修正：使用 Container 替代 Center
           ? Container(
-              // ✨ 使用 ValueKey 來幫助 AnimatedSwitcher 識別不同的 Widget
+              // 使用 ValueKey 來幫助 AnimatedSwitcher 識別不同的 Widget
               key: const ValueKey('empty-placeholder'),
-              // ✨ 明確地讓 Container 填滿所有可用空間
+
               width: double.infinity,
               height: double.infinity,
-              // ✨ 並將其子元件（Text）置中
+
               alignment: Alignment.center,
-              child: const Text("請選擇有紀錄的日期"),
+              child: state.selectedDay == null
+                  ? Text(
+                      S.current.selectDateToViewRecords,
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 8,
+                      children: [
+                        const SizedBox(height: 8),
+                        Text(
+                          S.current.noRecordForThisDay,
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: state.selectedDay == null
+                              ? null // 如果連日期都沒選，就禁用按鈕
+
+                              : () => showEditRecordDialog(
+                                    context: context,
+                                    selectedDate: state.selectedDay!,
+                                    existingRecord: null,
+                                  ),
+                          icon: Icon(Icons.add),
+                          label: Text(S.current.addNewRecord),
+                          style: OutlinedButton.styleFrom(),
+                        ),
+                      ],
+                    ),
             )
           : SingleChildScrollView(
               child: HistoryDetailCard(
@@ -162,14 +222,15 @@ class _CalendarHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<HistoryBloc>();
-    final headerText = DateFormat.yMMM('zh_TW').format(state.focusedMonth);
+    final locale = Localizations.localeOf(context).toString();
+    final headerText = DateFormat.yMMM(locale).format(state.focusedMonth);
     final now = DateTime.now();
+    final colorScheme = Theme.of(context).colorScheme;
 
-    // ✨ 關鍵修正：將判斷邏輯分開
-    // 規則 1：是否正在瀏覽當前月份？
+    // 是否正在瀏覽當前月份？
     final bool isViewingCurrentMonth = state.focusedMonth.year == now.year && state.focusedMonth.month == now.month;
 
-    // 規則 2：是否顯示「回到今天」按鈕？(只要不在當前月份就顯示)
+    // 是否顯示「回到今天」按鈕？(只要不在當前月份就顯示)
     final bool showTodayButton = !isViewingCurrentMonth;
 
     return Padding(
@@ -183,29 +244,32 @@ class _CalendarHeader extends StatelessWidget {
           ),
           const Spacer(),
 
-          // ✨ 「回到今天」按鈕，根據 showTodayButton 決定是否顯示
           if (showTodayButton)
             TextButton(
               onPressed: () {
                 bloc.add(DaySelected(DateTime.now()));
               },
-              child: const Text("今天"),
+              child: Text(S.current.today),
             ),
 
           // 上一個月按鈕
           IconButton(
-            icon: const Icon(Icons.chevron_left),
+            icon: Icon(
+              Icons.chevron_left,
+              color: colorScheme.onSurface.withValues(alpha: .8),
+            ),
             onPressed: () {
               final prevMonth = DateTime(state.focusedMonth.year, state.focusedMonth.month - 1);
               bloc.add(MonthChanged(prevMonth));
             },
           ),
 
-          // ✨ 下一個月按鈕，根據 isViewingCurrentMonth 決定是否禁用
           IconButton(
             icon: Icon(
               Icons.chevron_right,
-              color: isViewingCurrentMonth ? Colors.grey : Colors.black,
+              color: isViewingCurrentMonth
+                  ? colorScheme.onSurface.withValues(alpha: .3)
+                  : colorScheme.onSurface.withValues(alpha: .8),
             ),
             onPressed: isViewingCurrentMonth
                 ? null // 如果是當前月份，就禁用按鈕

@@ -1,5 +1,3 @@
-// lib/views/main_record_view/leave_card.dart
-
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +7,7 @@ import 'package:wise_clock/bloc/record_bloc.dart';
 import 'package:wise_clock/bloc/record_event.dart';
 import 'package:wise_clock/bloc/dashboard_bloc.dart';
 import 'package:wise_clock/bloc/record_state.dart';
+import 'package:wise_clock/generated/l10n.dart';
 
 import 'package:wise_clock/views/share_ui_components/shared_container.dart';
 
@@ -38,8 +37,11 @@ class _LeaveCardState extends State<LeaveCard> {
             splashColor: Colors.transparent,
           ),
           child: AlertDialog.adaptive(
-            title: const Text("確認操作"),
-            content: const Text("登記整天請假將會覆蓋您原有的上下班打卡紀錄，且此操作無法復原。您確定要繼續嗎？"),
+            title: Text(
+              S.current.areYouSureOverwrite,
+              softWrap: true,
+            ),
+            content: Text(S.current.overwriteExistingRecord),
             actions: _buildDialogActions(ctx),
           ),
         );
@@ -62,18 +64,21 @@ class _LeaveCardState extends State<LeaveCard> {
         CupertinoDialogAction(
           isDestructiveAction: true,
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text("取消"),
+          child: Text(S.current.cancel),
         ),
         CupertinoDialogAction(
           isDefaultAction: true,
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text("確定"),
+          child: Text(S.current.confirm),
         ),
       ];
     } else {
       return [
-        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("取消")),
-        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text("確定")),
+        TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(S.current.cancel)),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(S.current.confirm),
+        ),
       ];
     }
   }
@@ -90,7 +95,6 @@ class _LeaveCardState extends State<LeaveCard> {
             _selectedHours = null; // 重置選擇，讓 UI 在下次 build 時能從 BLoC 獲取最新值
           });
         }
-        // 您也可以在這裡處理 submissionStatus.isError 的情況，例如顯示一個錯誤 SnackBar
       },
       child: BlocBuilder<DashboardBloc, DashboardState>(
         buildWhen: (prev, curr) => prev.todayRecord != curr.todayRecord,
@@ -98,7 +102,7 @@ class _LeaveCardState extends State<LeaveCard> {
           final todayRecord = state.todayRecord;
           final double savedHours = todayRecord?.leaveDuration ?? 0.0;
 
-          // ✨ 核心邏輯：決定是否顯示編輯畫面
+          // 決定是否顯示編輯畫面
           final bool showEditView = (todayRecord == null) || _isEditing;
 
           // 初始化或同步 UI 上的暫存值
@@ -112,7 +116,7 @@ class _LeaveCardState extends State<LeaveCard> {
     );
   }
 
-  // ✨ 檢視模式的 UI (請假完成後或初始有紀錄時顯示)
+  // 檢視模式的 UI (請假完成後或初始有紀錄時顯示)
   Widget _buildReadOnlyView(BuildContext context, double savedHours) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -121,10 +125,10 @@ class _LeaveCardState extends State<LeaveCard> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("請假時數", style: Theme.of(context).textTheme.titleMedium),
+            Text(S.current.leaveHours, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(
-              savedHours == 0 ? "未請假" : "${savedHours.toInt()} 小時",
+              savedHours == 0 ? S.current.noLeave : "${savedHours.toInt()} ${S.current.hoursUnit(savedHours.toInt())}",
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
           ],
@@ -135,13 +139,13 @@ class _LeaveCardState extends State<LeaveCard> {
               _isEditing = true;
             });
           },
-          child: const Text("調整"),
+          child: Text(S.current.adjust),
         ),
       ],
     );
   }
 
-  // ✨ 編輯模式的 UI (一開始無紀錄，或按下「調整」後顯示)
+  // 編輯模式的 UI (一開始無紀錄，或按下「調整」後顯示)
   Widget _buildEditingView(BuildContext context, double savedHours) {
     final recordBloc = context.read<RecordBloc>();
     final todayRecord = context.read<DashboardBloc>().state.todayRecord;
@@ -151,76 +155,81 @@ class _LeaveCardState extends State<LeaveCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text("請假時數", style: Theme.of(context).textTheme.titleMedium),
+        Text(S.current.leaveHours, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Column(
           children: [
-            DropdownButtonHideUnderline(
-              child: DropdownButton2<double>(
-                isExpanded: true,
-                value: _selectedHours,
-                buttonStyleData: ButtonStyleData(
-                  width: 120,
-                  height: 40,
-                  // width: 180,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: Theme.of(context).cardColor,
-                    border: Border.all(color: Theme.of(context).dividerColor),
-                  ),
-                ),
-                dropdownStyleData: DropdownStyleData(
-                  maxHeight: 200,
-                  padding: EdgeInsets.zero,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: Theme.of(context).cardColor,
-                  ),
-                ),
-                items: List.generate(9, (i) => i.toDouble())
-                    .map((h) => DropdownMenuItem(value: h, child: Text(h == 0 ? "未請假" : "${h.toInt()} 小時")))
-                    .toList(),
-                onChanged: isDayStarted ? (v) => setState(() => _selectedHours = v) : null,
-              ),
-            ),
-            const SizedBox(width: 8),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("整天"),
-                Switch.adaptive(
-                  value: _selectedHours == 8.0,
-                  onChanged: (v) => setState(() => _selectedHours = v == true ? 8.0 : 0.0),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton2<double>(
+                    isExpanded: true,
+                    value: _selectedHours,
+                    buttonStyleData: ButtonStyleData(
+                      width: 140,
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: Theme.of(context).cardColor,
+                        border: Border.all(color: Theme.of(context).dividerColor),
+                      ),
+                    ),
+                    dropdownStyleData: DropdownStyleData(
+                      maxHeight: 220,
+                      padding: EdgeInsets.zero,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: Theme.of(context).cardColor,
+                      ),
+                    ),
+                    // selectedItemBuilder: (context) => [Text("a")],
+                    items: List.generate(9, (i) => i.toDouble())
+                        .map((h) => DropdownMenuItem(
+                            value: h,
+                            child: Text(h == 0 ? S.current.noLeave : "${h.toInt()} ${S.current.hoursUnit(h.toInt())}")))
+                        .toList(),
+                    onChanged: isDayStarted ? (v) => setState(() => _selectedHours = v) : null,
+                  ),
                 ),
-                const SizedBox(width: 16),
-                Column(
+                Row(
                   children: [
-                    // ✨ 如果是從「調整」按鈕進來的，才顯示「取消」按鈕
-                    if (isDayStarted)
-                      TextButton(
-                          onPressed: () => setState(() {
-                                _isEditing = false;
-                                _selectedHours = null; // 取消時重置選擇
-                              }),
-                          child: const Text("取消")),
+                    Text(S.current.fullDay),
                     const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: isButtonEnabled
-                          ? () {
-                              if (_selectedHours == 8.0 && todayRecord?.clockOutTime != null) {
-                                _showConfirmationDialog();
-                              } else {
-                                recordBloc.add(LeaveDurationSubmitted(_selectedHours!));
-                                // 提交後，讓 BlocListener 來處理狀態重置，這裡不再需要 setState
-                              }
-                            }
-                          : null,
-                      child: const Text("登記"),
+                    Switch.adaptive(
+                      value: _selectedHours == 8.0,
+                      onChanged: (v) => setState(() => _selectedHours = v == true ? 8.0 : 0.0),
                     ),
                   ],
                 ),
               ],
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // 如果是從「調整」按鈕進來的，才顯示「取消」按鈕
+            if (isDayStarted)
+              TextButton(
+                  onPressed: () => setState(() {
+                        _isEditing = false;
+                        _selectedHours = null; // 取消時重置選擇
+                      }),
+                  child: Text(S.current.cancel)),
+            const SizedBox(width: 8),
+            FilledButton(
+              onPressed: isButtonEnabled
+                  ? () {
+                      if (_selectedHours == 8.0 && todayRecord?.clockOutTime != null) {
+                        _showConfirmationDialog();
+                      } else {
+                        recordBloc.add(LeaveDurationSubmitted(_selectedHours!));
+                      }
+                    }
+                  : null,
+              child: Text(S.current.takeLeave),
             ),
           ],
         ),

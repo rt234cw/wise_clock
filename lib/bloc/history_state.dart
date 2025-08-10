@@ -39,7 +39,7 @@ class HistoryState extends Equatable {
     HistoryStatus? status,
     DateTime? focusedMonth,
     DateTime? selectedDay,
-    bool clearSelectedDay = false, // ✨ 新增一個旗標，用來明確地清除選中日期
+    bool clearSelectedDay = false,
     List<ClockRecord>? recordsForMonth,
   }) {
     return HistoryState(

@@ -1,5 +1,3 @@
-// lib/bloc/record_event.dart
-
 import 'package:equatable/equatable.dart';
 
 abstract class RecordEvent extends Equatable {
@@ -39,3 +37,5 @@ class RecordDeleted extends RecordEvent {
   @override
   List<Object> get props => [id];
 }
+
+class AllRecordsDeleted extends RecordEvent {}

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:wheel_picker/wheel_picker.dart';
-import 'package:wise_clock/color_scheme/color_code.dart';
 
 class TimeWheel extends StatefulWidget {
   final ({int hour, int min, int sec})? userReocrd;
@@ -72,7 +71,6 @@ class _TimeWheelState extends State<TimeWheel> {
         width: 130,
         height: 60,
         child: Stack(
-          // fit: StackFit.expand,
           children: [
             _centerBar(),
             Row(
@@ -86,7 +84,7 @@ class _TimeWheelState extends State<TimeWheel> {
                         height: 60,
                         width: 40,
                         child: WheelPicker(
-                          selectedIndexColor: Colors.deepOrange,
+                          selectedIndexColor: Theme.of(context).colorScheme.primary,
                           controller: wheelController,
                           style: wheelStyle,
                           onIndexChanged: (index, interactionType) {
@@ -121,7 +119,7 @@ class _TimeWheelState extends State<TimeWheel> {
       child: Container(
         height: 30,
         decoration: BoxDecoration(
-          color: ColorCode.primaryColor.withAlpha(20),
+          color: Theme.of(context).colorScheme.primary.withAlpha(20),
           borderRadius: BorderRadius.circular(8.0),
         ),
       ),

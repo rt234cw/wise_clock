@@ -15,8 +15,8 @@ class AnimatedBar extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       height: 4,
       width: isActive ? 30 : 0,
-      decoration: const BoxDecoration(
-          color: Color(0xFF81B4FF),
+      decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.all(
             Radius.circular(12),
           )),

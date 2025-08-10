@@ -1,5 +1,3 @@
-// lib/bloc/history_bloc.dart
-
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wise_clock/bloc/history_event.dart';
@@ -9,7 +7,7 @@ import 'package:wise_clock/model/dashboard_repository.dart';
 
 import '../views/history_view/history_view.dart';
 
-// ✨ 1. 我們同樣需要一個私有事件，來處理從資料庫來的更新
+// 需要一個私有事件，來處理從資料庫來的更新
 class _HistoryRecordsUpdated extends HistoryEvent {
   final List<ClockRecord> records;
   const _HistoryRecordsUpdated(this.records);
@@ -22,15 +20,15 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   final DashboardRepository _repo;
   late final StreamSubscription<List<ClockRecord>> _recordsSub;
 
-  // ✨ 2. 初始化 BLoC，設定初始的聚焦月份為今天
+  //  初始化 BLoC，設定初始的聚焦月份為今天
   HistoryBloc(this._repo) : super(HistoryState(focusedMonth: DateTime.now())) {
-    // ✨ 3. 監聽 Repository 的響應式資料流
+    // 監聽 Repository 的響應式資料流
     _recordsSub = _repo.watchAllRecords().listen((allRecords) {
       // 當資料庫有任何變動，就發出一個內部的 _HistoryRecordsUpdated 事件
       add(_HistoryRecordsUpdated(allRecords));
     });
 
-    // ✨ 4. 為所有事件註冊處理器
+    // 為所有事件註冊處理器
     on<_HistoryRecordsUpdated>(_onRecordsUpdated);
     on<MonthChanged>(_onMonthChanged);
     on<DaySelected>(_onDaySelected);

@@ -1,5 +1,3 @@
-// lib/bloc/dashboard_bloc.dart
-
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wise_clock/bloc/clock_record_state.dart';
@@ -8,7 +6,6 @@ import 'package:wise_clock/delayed_result.dart';
 import 'package:wise_clock/hive/clock_record.dart';
 import 'package:wise_clock/model/dashboard_repository.dart';
 
-// ✨ 1. 我們需要一個私有事件，將 Stream 的資料整合進 BLoC 的事件循環
 class _RecordsUpdated extends DashboardEvent {
   final List<ClockRecord> records;
   const _RecordsUpdated(this.records);
@@ -23,19 +20,19 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
   DashboardBloc(this._repo)
       : super(
-          // ✨ BLoC 的初始狀態
+          // BLoC 的初始狀態
           DashboardState(
             status: DataStatus.initial,
             delayedResult: DelayedResult.idle(),
           ),
         ) {
-    // ✨ 2. 監聽 Repository 的響應式資料流
+    // 監聽 Repository 的響應式資料流
     _recordsSub = _repo.watchAllRecords().listen((allRecords) {
       // 當資料庫有任何變動，就發出一個內部的 _RecordsUpdated 事件
       add(_RecordsUpdated(allRecords));
     });
 
-    // ✨ 3. 為這個私有事件註冊處理器
+    // 為這個私有事件註冊處理器
     on<_RecordsUpdated>(_onRecordsUpdated);
   }
 
@@ -44,7 +41,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     // 從完整的紀錄列表中，篩選出儀表板頁面需要的「本週紀錄」
     final thisWeekRecords = _filterThisWeekRecords(event.records);
 
-    // 發射一個帶有最新資料的 success 狀態
+    // emit一個帶有最新資料的 success 狀態
     emit(state.copyWith(
       status: DataStatus.success,
       thisWeekRecords: thisWeekRecords,
@@ -67,7 +64,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     }).toList();
   }
 
-  // ✨ 4. 在 BLoC 被銷毀時，務必取消監聽，防止記憶體洩漏
+  // 在 BLoC 被銷毀時取消監聽，防止記憶體洩漏
   @override
   Future<void> close() {
     _recordsSub.cancel();

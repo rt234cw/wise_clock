@@ -1,9 +1,7 @@
-// lib/hive/clock_record.dart
-
 import 'package:equatable/equatable.dart';
 import 'package:hive/hive.dart';
 
-part 'clock_record.g.dart'; // 確保你的 g.dart 檔案存在
+part 'clock_record.g.dart';
 
 @HiveType(typeId: 0)
 class ClockRecord extends Equatable {
@@ -17,9 +15,9 @@ class ClockRecord extends Equatable {
   final DateTime? clockOutTime;
 
   @HiveField(3)
-  final double? offDuration; // 原有的休息時間
+  final double? offDuration;
 
-  // ✨ 1. 新增請假時數欄位 (單位：小時)
+  // 請假時數欄位 (單位：小時)
   @HiveField(4)
   final double? leaveDuration;
 
@@ -28,14 +26,14 @@ class ClockRecord extends Equatable {
     required this.clockInTime,
     this.clockOutTime,
     this.offDuration,
-    this.leaveDuration, // ✨ 加入建構函式
+    this.leaveDuration,
   });
 
   ClockRecord copyWith({
     DateTime? clockInTime,
     DateTime? clockOutTime,
     double? offDuration,
-    double? leaveDuration, // ✨ 加入 copyWith
+    double? leaveDuration,
   }) {
     return ClockRecord(
       id: id,
@@ -52,6 +50,6 @@ class ClockRecord extends Equatable {
         clockInTime,
         clockOutTime,
         offDuration,
-        leaveDuration, // ✨ 加入 props
+        leaveDuration,
       ];
 }

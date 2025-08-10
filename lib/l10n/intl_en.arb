@@ -1,1 +1,61 @@
-{}
+{
+  "@hoursUnit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@minutesUnit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "abbreHour": "H",
+  "abbreMinute": "m",
+  "accumulatedHours": "Weekly Hours",
+  "addNewRecord": "Add New Record",
+  "adjust": "Adjust",
+  "areYouSureOverwrite": "Are you sure to overwirte existing record?",
+  "balanced": "Balanced",
+  "cancel": "Cancel",
+  "clear": "Clear",
+  "clearAll": "Clear All",
+  "clearAllRecords": "Clear All Records",
+  "clockIn": "Clock In",
+  "clockInNow": "Clock In Now",
+  "clockInTime": "Clock In Time",
+  "clockOutTime": "Clock Out Time",
+  "close": "Close",
+  "confirm": "Confirm",
+  "confirmAction": "Confirm Action",
+  "dataLoadingFailed": "Data Loading Failed ",
+  "day": "Day",
+  "editRecord": "Edit Record",
+  "fullDay": "Full Day",
+  "hours": "Hours",
+  "hoursUnit": "{count,plural, =1{hour} other{hours}}",
+  "leave": "Leave",
+  "leaveHours": "Leave Hours",
+  "manualEntry": "Manual Entry",
+  "minutesUnit": "{count,plural, =1{min} other{mins}}",
+  "noCompletedRecords": "No completed records this week",
+  "noLeave": "No Leave",
+  "noRecordForThisDay": "No record for this day",
+  "notClockedIn": "Not Clocked In",
+  "out": "Out",
+  "overtime": "Overtime",
+  "overwriteExistingRecord": "Registering a full-day leave will overwrite your existing clock-in/out records for today, and this action cannot be undone.",
+  "permanentlyDelete": "This will permanently delete all of your clock-in records. Are you sure you want to continue?",
+  "selectDateToViewRecords": "Select a date to view records",
+  "selectLanguage": "Select Language",
+  "settings": "Settings",
+  "shortage": "Shortage",
+  "sureToDeleteRecord": "Are you sure you want to delete this record? This action cannot be undone.",
+  "takeLeave": "Take Leave",
+  "today": "Today",
+  "update": "Update",
+  "workIn": "In"
+}

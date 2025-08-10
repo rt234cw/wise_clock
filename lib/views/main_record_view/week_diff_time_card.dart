@@ -1,18 +1,15 @@
-// lib/views/main_record_view/week_diff_time_card.dart
-
 import 'package:flutter/material.dart';
+import 'package:wise_clock/generated/l10n.dart';
 import 'package:wise_clock/views/share_ui_components/shared_container.dart';
 import '../../bloc/bloc_barrel.dart';
-import '../../color_scheme/color_code.dart';
+
 import 'package:wise_clock/hive/clock_record.dart';
 
-class WeekDiffTimeCard extends StatelessWidget {
-  const WeekDiffTimeCard({super.key});
+class WeeklyAccumulatedTimeCard extends StatelessWidget {
+  const WeeklyAccumulatedTimeCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // 標準一週總工時
-    const standardWeekWorkDuration = Duration(hours: 40);
     // 標準休息時間為 1 小時
     const standardBreakDuration = Duration(hours: 1);
 
@@ -21,74 +18,81 @@ class WeekDiffTimeCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "本週時數",
+          S.current.accumulatedHours,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         BlocBuilder<DashboardBloc, DashboardState>(
           buildWhen: (previous, current) => previous.thisWeekRecords != current.thisWeekRecords,
           builder: (context, state) {
-            // ✨ 關鍵修正：在計算前，先篩選出週一到週五的紀錄
+            // 篩選出本週一到五，實際有打卡紀錄的日子
             final weekdayRecords = state.thisWeekRecords.where((record) {
               final weekday = record.clockInTime.weekday;
-              return weekday >= DateTime.monday && weekday <= DateTime.friday;
+              return record.clockOutTime != null && weekday >= DateTime.monday && weekday <= DateTime.friday;
             }).toList();
 
-            // 1. 宣告一個變數來累加本週的總認定工時
+            // 計算動態的「應有」標準工時
+            // 應有工作天數 = 實際有打卡的天數
+            final int workingDaysWithRecords = weekdayRecords.length;
+            // 應有的標準總工時 = 有打卡的天數 * 8 小時 (因為9小時含1小時休息)
+            final standardWorkDurationForRecordedDays = Duration(hours: workingDaysWithRecords * 8);
+
+            // 計算「實際」累積的認定工時 (只計算那些有打卡的日子)
             Duration totalRecognizedDuration = Duration.zero;
 
-            // 2. ✨ 遍歷篩選後的列表 (weekdayRecords)
             for (final ClockRecord record in weekdayRecords) {
               Duration dailyTotal;
-
-              // 3. 檢查是否為「整天請假」的特殊情況
               if (record.leaveDuration == 8.0) {
-                // 如果是，直接將當日認定工時視為 8 小時
                 dailyTotal = const Duration(hours: 8);
               } else {
-                // 4. 否則，執行正常的詳細計算
                 Duration dailyNetWorkDuration = Duration.zero;
 
-                if (record.clockOutTime != null) {
-                  final grossDuration = record.clockOutTime!.difference(record.clockInTime);
-                  Duration breakToSubtract;
-                  if (record.offDuration != null) {
-                    breakToSubtract = Duration(seconds: (record.offDuration! * 3600).round());
-                  } else {
-                    breakToSubtract = (grossDuration.inHours >= 6) ? standardBreakDuration : Duration.zero;
-                  }
-                  dailyNetWorkDuration = grossDuration - breakToSubtract;
+                final grossDuration = record.clockOutTime!.difference(record.clockInTime);
+                const fourHours = Duration(hours: 4);
+                const fiveHours = Duration(hours: 5);
+
+                // 大於五小時，就要扣除一小時的休息時間
+                if (grossDuration > fiveHours) {
+                  dailyNetWorkDuration = grossDuration - standardBreakDuration;
+                }
+                //大於四小時，小於五小時，工時等於4小時
+                else if (grossDuration > fourHours) {
+                  dailyNetWorkDuration = fourHours;
+                }
+
+                // 小於四小時，不計算休息時間
+                else {
+                  dailyNetWorkDuration = grossDuration;
                 }
 
                 final leaveInHours = record.leaveDuration ?? 0.0;
                 final leaveDuration = Duration(seconds: (leaveInHours * 3600).round());
                 dailyTotal = dailyNetWorkDuration + leaveDuration;
               }
-
               totalRecognizedDuration += dailyTotal.isNegative ? Duration.zero : dailyTotal;
             }
 
-            // --- 接下來的計算和顯示邏輯 ---
-            final difference = totalRecognizedDuration - standardWeekWorkDuration;
-
+            // 計算差異並顯示
+            final difference = totalRecognizedDuration - standardWorkDurationForRecordedDays;
             final absSeconds = difference.inSeconds.abs();
             final hours = absSeconds ~/ 3600;
             final minutes = (absSeconds % 3600) ~/ 60;
 
             String formattedTime = '';
             if (hours > 0) {
-              formattedTime += '$hours時';
+              formattedTime += '$hours ${S.current.hoursUnit(hours)}';
             }
-            formattedTime += '${minutes.toString().padLeft(2, '0')}分';
+            formattedTime +=
+                '${minutes.toString().padLeft(2, minutes == 0 ? '' : '0')} ${S.current.minutesUnit(minutes == 0 ? 1 : minutes)}';
 
             Color displayColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
-            String prefix = '正好';
+            String prefix = S.current.balanced;
 
             if (difference.inSeconds > 0) {
-              displayColor = ColorCode.green;
-              prefix = '超時';
+              displayColor = Colors.greenAccent;
+              prefix = S.current.overtime;
             } else if (difference.inSeconds < 0) {
-              displayColor = ColorCode.red;
-              prefix = '短缺';
+              displayColor = Colors.redAccent;
+              prefix = S.current.shortage;
             }
 
             return FittedBox(

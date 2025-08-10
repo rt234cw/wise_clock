@@ -1,5 +1,3 @@
-// lib/bloc/record_bloc.dart
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import 'package:wise_clock/bloc/record_event.dart';
@@ -12,19 +10,18 @@ class RecordBloc extends Bloc<RecordEvent, RecordState> {
   final DashboardRepository _repo;
   final _uuid = Uuid();
 
-  // ✨ 關鍵修正 1：在 super() 中使用正確的參數名稱 `submissionStatus`
   RecordBloc(this._repo) : super(RecordState(submissionStatus: DelayedResult.idle())) {
     on<ClockInTimeSubmitted>(_onClockInTimeSubmitted);
     on<ClockOutTimeSubmitted>(_onClockOutTimeSubmitted);
     on<LeaveDurationSubmitted>(_onLeaveDurationSubmitted);
     on<RecordDeleted>(_onRecordDeleted);
+    on<AllRecordsDeleted>(_onAllRecordsDeleted);
   }
 
   Future<void> _onClockInTimeSubmitted(
     ClockInTimeSubmitted event,
     Emitter<RecordState> emit,
   ) async {
-    // ✨ 關鍵修正 2：所有 copyWith 都使用 submissionStatus
     emit(state.copyWith(submissionStatus: DelayedResult.loading()));
     try {
       final existingRecord = await _repo.findRecordForDate(event.time);
@@ -132,6 +129,19 @@ class RecordBloc extends Bloc<RecordEvent, RecordState> {
     emit(state.copyWith(submissionStatus: DelayedResult.loading()));
     try {
       await _repo.deleteRecord(event.id);
+      emit(state.copyWith(submissionStatus: DelayedResult.success(null)));
+    } catch (e) {
+      emit(state.copyWith(submissionStatus: DelayedResult.failure(e.toString())));
+    }
+  }
+
+  Future<void> _onAllRecordsDeleted(
+    AllRecordsDeleted event,
+    Emitter<RecordState> emit,
+  ) async {
+    emit(state.copyWith(submissionStatus: DelayedResult.loading()));
+    try {
+      await _repo.deleteAllRecords();
       emit(state.copyWith(submissionStatus: DelayedResult.success(null)));
     } catch (e) {
       emit(state.copyWith(submissionStatus: DelayedResult.failure(e.toString())));

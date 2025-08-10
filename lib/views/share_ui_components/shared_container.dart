@@ -6,13 +6,15 @@ class SharedContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Material(
       // Use transparent to avoid background color issues
       color: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         decoration: BoxDecoration(
-          color: Color.fromARGB(255, 227, 231, 240),
+          border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.15)),
+          color: colorScheme.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(10),
         ),
         child: child,
