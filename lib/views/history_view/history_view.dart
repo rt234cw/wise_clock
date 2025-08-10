@@ -59,8 +59,9 @@ class _HistoryViewState extends State<HistoryView> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return TableCalendar<ClockRecord>(
-      locale: context.read<LocaleProvider>().locale?.languageCode ?? 'zh_TW',
-      firstDay: DateTime.utc(2020, 1, 1),
+      startingDayOfWeek: StartingDayOfWeek.monday,
+      locale: context.read<LocaleProvider>().locale?.languageCode ?? 'en',
+      firstDay: DateTime.utc(2025, 1, 1),
       lastDay: now,
       onlyWeekdays: showWeekdays,
       focusedDay: state.focusedMonth,
@@ -68,10 +69,10 @@ class _HistoryViewState extends State<HistoryView> {
       daysOfWeekHeight: 32,
       rowHeight: 36,
       headerVisible: false,
-      enabledDayPredicate: (day) => !day.isAfter(now),
+      // enabledDayPredicate: (day) => !day.isAfter(now),
       calendarStyle: CalendarStyle(
         disabledTextStyle: TextStyle(
-          color: colorScheme.onSurface.withValues(alpha: 0.2),
+          color: colorScheme.primary.withValues(alpha: 0.1),
         ),
         defaultTextStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.8)),
         outsideTextStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.4)),
@@ -87,12 +88,12 @@ class _HistoryViewState extends State<HistoryView> {
           fontWeight: FontWeight.bold,
         ),
         todayDecoration: BoxDecoration(
-          border: Border.all(color: colorScheme.secondary, width: 1.5),
+          border: BoxBorder.all(color: colorScheme.tertiary, width: 1.5),
           shape: BoxShape.circle,
         ),
         todayTextStyle: TextStyle(
           color: colorScheme.secondary, // Use accent color for 'today' text
-          fontWeight: FontWeight.bold,
+          // fontWeight: FontWeight.bold,
         ),
       ),
       daysOfWeekStyle: DaysOfWeekStyle(

@@ -49,9 +49,6 @@ Future<void> showEditRecordDialog({
               child: Dialog(
                 insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-
-                // title: Text(existingRecord == null ? S.current.addNewRecord : S.current.editRecord),
-                // contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
@@ -103,11 +100,10 @@ Future<void> showEditRecordDialog({
                             ],
                           )),
                       const SizedBox(height: 32),
-                      _buildDialogActions(context, isDelete: existingRecord != null),
+                      _buildDialogActions(context),
                     ],
                   ),
                 ),
-                // actions: _buildDialogActions(context, isDelete: existingRecord != null),
               ),
             ),
           );
@@ -117,18 +113,33 @@ Future<void> showEditRecordDialog({
   );
 
   if (confirmed == true) {
-    // ✨ 提交邏輯保持不變，但現在是共用的
-    final newClockInTime = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, tempClockInTime.hour,
-        tempClockInTime.min, tempClockInTime.sec);
+    // 提交邏輯保持不變，但現在是共用的
+    final newClockInTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      tempClockInTime.hour,
+      tempClockInTime.min,
+      tempClockInTime.sec,
+    );
     recordBloc.add(ClockInTimeSubmitted(newClockInTime));
 
     if (tempClockOutTime != null) {
-      final newClockOutTime = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, tempClockOutTime!.hour,
-          tempClockOutTime!.min, tempClockOutTime!.sec);
+      final newClockOutTime = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        tempClockOutTime!.hour,
+        tempClockOutTime!.min,
+        tempClockOutTime!.sec,
+      );
       recordBloc.add(ClockOutTimeSubmitted(newClockOutTime));
     }
 
-    recordBloc.add(LeaveDurationSubmitted(tempLeaveHours));
+    recordBloc.add(LeaveDurationSubmitted(
+      date: selectedDate,
+      hours: tempLeaveHours,
+    ));
   }
 }
 
@@ -146,7 +157,7 @@ Widget _buildEditRow(BuildContext context, String label, Widget control) {
   );
 }
 
-Widget _buildDialogActions(BuildContext context, {required bool isDelete}) {
+Widget _buildDialogActions(BuildContext context) {
   return Row(
     mainAxisAlignment: MainAxisAlignment.end,
     children: [

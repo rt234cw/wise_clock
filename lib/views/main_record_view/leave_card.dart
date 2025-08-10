@@ -49,7 +49,10 @@ class _LeaveCardState extends State<LeaveCard> {
     );
 
     if (confirmed == true && _selectedHours != null) {
-      recordBloc.add(LeaveDurationSubmitted(_selectedHours!));
+      recordBloc.add(LeaveDurationSubmitted(
+        date: DateTime.now(),
+        hours: _selectedHours!,
+      ));
       setState(() {
         _isEditing = false;
       }); // 提交後自動切換到檢視模式
@@ -225,7 +228,10 @@ class _LeaveCardState extends State<LeaveCard> {
                       if (_selectedHours == 8.0 && todayRecord?.clockOutTime != null) {
                         _showConfirmationDialog();
                       } else {
-                        recordBloc.add(LeaveDurationSubmitted(_selectedHours!));
+                        recordBloc.add(LeaveDurationSubmitted(
+                          date: DateTime.now(),
+                          hours: _selectedHours!,
+                        ));
                       }
                     }
                   : null,

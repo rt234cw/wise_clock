@@ -73,8 +73,10 @@ class RecordBloc extends Bloc<RecordEvent, RecordState> {
   ) async {
     emit(state.copyWith(submissionStatus: DelayedResult.loading()));
     try {
-      final date = DateTime.now();
+      // ✨ 關鍵修正：使用從事件傳來的 event.date，而不是寫死的 DateTime.now()
+      final date = event.date;
       final existingRecord = await _repo.findRecordForDate(date);
+
       final bool isCancelingLeave = event.hours == 0;
       final bool isFullDayLeave = event.hours == 8.0;
 

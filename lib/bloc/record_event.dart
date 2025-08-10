@@ -24,10 +24,11 @@ class ClockOutTimeSubmitted extends RecordEvent {
 
 // 新增或編輯請假時數
 class LeaveDurationSubmitted extends RecordEvent {
+  final DateTime date;
   final double hours;
-  const LeaveDurationSubmitted(this.hours);
+  const LeaveDurationSubmitted({required this.date, required this.hours});
   @override
-  List<Object> get props => [hours];
+  List<Object> get props => [date, hours];
 }
 
 class RecordDeleted extends RecordEvent {
