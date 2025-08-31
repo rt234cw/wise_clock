@@ -67,7 +67,7 @@ class _HistoryViewState extends State<HistoryView> {
       focusedDay: state.focusedMonth,
       sixWeekMonthsEnforced: sixWeekMonthsEnforced,
       daysOfWeekHeight: 32,
-      rowHeight: 36,
+      rowHeight: 44,
       headerVisible: false,
       // enabledDayPredicate: (day) => !day.isAfter(now),
       calendarStyle: CalendarStyle(
