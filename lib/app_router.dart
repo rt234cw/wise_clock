@@ -1,9 +1,9 @@
 import 'package:go_router/go_router.dart';
-import 'package:wise_clock/views/settings_view/settings_view.dart';
+import 'package:wise_clock/features/settings/presentation/view/settings_view.dart';
 
-import 'views/history_view/history_view.dart';
-import 'views/landing_view.dart';
-import 'views/main_record_view/dashboard_view.dart';
+import 'features/history/presentation/view/history_view.dart';
+import 'features/shell/presentation/view/landing_view.dart';
+import 'features/clock_in/presentation/view/dashboard_view.dart';
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[

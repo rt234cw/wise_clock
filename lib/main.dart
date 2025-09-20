@@ -3,17 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:wise_clock/app_router.dart';
-import 'package:wise_clock/bloc/dashboard_bloc.dart';
-import 'package:wise_clock/bloc/history_bloc.dart';
-import 'package:wise_clock/bloc/record_bloc.dart';
-import 'package:wise_clock/model/dashboard_repository.dart';
-import 'package:wise_clock/providers/locale_provider.dart';
-import 'package:wise_clock/views/app_theme.dart';
+import 'package:wise_clock/features/clock_in/bloc/dashboard_bloc.dart';
+import 'package:wise_clock/features/history/bloc/history_bloc.dart';
+import 'package:wise_clock/core/bloc/record_bloc.dart';
+import 'package:wise_clock/core/data/repository/dashboard_repository.dart';
+import 'package:wise_clock/core/providers/locale_provider.dart';
+import 'package:wise_clock/core/theme/app_theme.dart';
 import 'generated/l10n.dart';
-import 'hive/hive_service.dart';
+import 'core/data/data_sources/hive_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-import 'providers/settings_provider.dart';
+import 'core/providers/settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
